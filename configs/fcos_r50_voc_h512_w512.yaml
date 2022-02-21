@@ -1,0 +1,86 @@
+__variables:
+  - &size [512, 512]
+  - &mean [0.485, 0.456, 0.406]
+  - &std [0.229, 0.224, 0.225]
+  - &data_dir ./data/voc07+12/
+  - &n_classes 20
+
+__particular_variables:
+  - &feat_sizes [3, 4, 5, 6, 7]
+
+framework: Detection
+
+data_pipeline:
+  dataset:
+    type: DetectionDataset
+    data_dir: *data_dir
+    transforms:
+      train:
+        - { type: PhotoMetricDistortion }
+        - { type: Normalize, mean: *mean, std: *std }
+        - { type: RandomExpand, ratio_range: [1.0, 4.0] }
+        - { type: RandomMinIoUCrop, min_ious: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9] }
+        - { type: Resize, size: *size }
+        - { type: RandomHorizontalFlip }
+        - { type: PixelwiseCutOff, p: [0.0, 0.05] }
+      val:
+        - { type: Normalize, mean: *mean, std: *std }
+        - { type: Resize, size: *size }
+      test:
+        - { type: Normalize, mean: *mean, std: *std }
+        - { type: Resize, size: *size }
+    encoder:
+      type: FCOSEncoder
+      input_size: *size
+      feat_sizes: *feat_sizes
+  dataloader:
+    batch_size: 8
+    num_workers: 2
+
+model:
+  type: FCOS
+  backbone:
+    type: ResNet
+    depth: 50
+    weights: default
+    frozen_stages: 1
+    extra_mode: conv
+  n_classes: *n_classes
+  input_size: *size
+  feat_sizes: *feat_sizes
+  criterion:
+    reg_loss: { type: IoULossWithDistance, reduction: sum }
+    cls_loss: { type: FocalLoss, alpha: 0.25, gamma: 2, reduction: sum }
+    cnt_loss: { type: BCEWithLogitsLoss, reduction: sum }
+  postprocess:
+    type: MultiLabelNMS
+    min_score: 0.01
+    select_top: 200
+    nms_iou: 0.45
+
+optimizer:
+  type: SGD
+  param_args:
+    lr:
+      backbone: 0.1
+      bias: 2.
+      scale: 2.
+    weight_decay:
+      bias: 0.
+      scale: 0.
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+
+scheduler:
+  type: WarmupMultiStepLR
+  milestones: [40, 60]
+  gamma: 0.1
+  warmup_interval: 3
+  warmup_start_factor: 0.3
+
+metrics:
+  - type: BBoxMeanAP
+    anno_path: ./data/voc07+12/annotations/instances_val.json
+    pred_size: *size
+    classwise: false
