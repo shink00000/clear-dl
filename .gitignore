@@ -1,0 +1,13 @@
+# develop
+.vscode
+.env
+
+# build
+*.egg-info
+
+# data
+data
+
+# cache
+__pycache__
+.ipynb_checkpoints
