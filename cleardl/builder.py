@@ -13,8 +13,10 @@ def build_data_pipeline(cfg: dict):
     return DataPipeline(**cfg)
 
 
-def build_framework(type: str):
-    return FRAMEWORKS[type]
+def build_framework(cfg: dict):
+    Frame = FRAMEWORKS[cfg['type']]
+    Frame.INPUT_SIZE = cfg['input_size']
+    return Frame
 
 
 def build_model(cfg: dict):

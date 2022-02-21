@@ -8,7 +8,9 @@ __variables:
 __particular_variables:
   - &feat_sizes [3, 4, 5, 6, 7]
 
-framework: Detection
+framework:
+  type: Detection
+  input_size: *size
 
 data_pipeline:
   dataset:

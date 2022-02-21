@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
 from abc import ABCMeta, abstractmethod
+from torchinfo import summary
 
 
 class BaseFramework(nn.Module, metaclass=ABCMeta):
+    INPUT_SIZE = None
+
     def __init__(self, model: object, optimizer: object, scheduler: object, metrics: object):
         super().__init__()
         if torch.cuda.is_available():
@@ -100,3 +103,9 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         for name, v in self._results['val'].items():
             if 'Metric' in name:
                 print(f'{name}:\n{v}')
+
+    def info(self):
+        print('=========================================================================')
+        print(self)
+        print('=========================================================================')
+        summary(self.model, (2, 3, *self.INPUT_SIZE))

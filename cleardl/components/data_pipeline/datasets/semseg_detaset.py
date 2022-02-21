@@ -2,6 +2,8 @@ from torch.utils.data import Dataset
 from PIL import Image
 from pathlib import Path
 from torchvision.transforms.functional import to_tensor
+import numpy as np
+import torch
 
 from ..transforms import build_transforms
 
@@ -41,7 +43,7 @@ class SemSegDataset(Dataset):
         image_path, label_path = self.data_list[idx]
         data_container = {
             'image': to_tensor(Image.open(image_path)),
-            'label': to_tensor(Image.open(label_path))
+            'label': torch.from_numpy(np.array(Image.open(label_path), copy=True, dtype=np.long))
         }
         data_container = self.transforms(data_container)
         image = data_container['image']

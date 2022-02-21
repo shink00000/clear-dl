@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 
 from ..losses import build_loss
@@ -80,3 +81,7 @@ class UNet(nn.Module):
     def loss(self, outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         loss = self.cls_loss(outputs, targets)
         return loss
+
+    def predict(self, outputs: torch.Tensor) -> torch.Tensor:
+        preds = F.softmax(outputs, dim=1)
+        return preds

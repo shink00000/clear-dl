@@ -3,7 +3,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
-from torchinfo import summary
 
 
 class EpochLogger:
@@ -58,10 +57,7 @@ class Controller:
         self.start_epoch = self.module.last_epoch + 1
 
     def __call__(self, mode: str):
-        print('=========================================================================')
-        print(self.module)
-        print('=========================================================================')
-        summary(self.module.model, input_size=(2, 3, 128, 128))
+        self.module.info()
 
         assert mode in ('train', 'evaluate', 'inference')
         getattr(self, mode)()
