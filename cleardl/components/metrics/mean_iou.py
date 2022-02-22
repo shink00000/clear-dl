@@ -36,8 +36,8 @@ class MeanIoU(Metric):
         inters = (preds * targets).sum(dim=0)
         unions = preds.sum(dim=0) + targets.sum(dim=0) - inters
 
-        self.inters += inters[1:]
-        self.unions += unions[1:]
+        self.inters += inters[1:].cpu()
+        self.unions += unions[1:].cpu()
 
     def compute(self) -> dict:
         lines = []

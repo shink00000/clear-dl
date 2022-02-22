@@ -69,7 +69,7 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.model.load_state_dict(state_dict['weights'])
         self.optimizer.load_state_dict(state_dict['optimizer'])
         self.scheduler.load_state_dict(state_dict['scheduler'])
-        self._last_epoch = state_dict['epoch']
+        self.last_epoch = state_dict['epoch']
 
     def view_metrics(self):
         for name, v in self.results['val'].items():
