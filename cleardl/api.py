@@ -42,19 +42,13 @@ def main(args):
 
 
 if __name__ == '__main__':
-    from pathlib import Path
-
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', type=str, choices=['train', 'evaluate', 'inference'])
     parser.add_argument('config_path', type=str)
-    parser.add_argument('--output_dir', type=str, default=None)
+    parser.add_argument('--output_dir', type=str, default='./results/test')
     parser.add_argument('--max_epochs', type=int, default=10)
     parser.add_argument('--eval_interval', type=int, default=10)
     parser.add_argument('--resume_from', type=str, default=None)
-
     args = parser.parse_args()
-
-    if args.output_dir is None:
-        args.output_dir = './results/' + Path(args.config_path).stem
 
     main(args)

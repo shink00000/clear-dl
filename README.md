@@ -13,7 +13,7 @@ I will be creating models for the following areas of image recognition.
     * data: PascalVOC
     * input_size: (512, 512)
     * backbone: ResNet50
-* [train log](./results/retinanet_r50_voc_h512_w512/20220213_220417.log)
+* [train log](./results/detection/retinanet_r50_voc_h512_w512/20220213_220417.log)
 * [tensorboard](https://tensorboard.dev/experiment/t9GfKu4KRb6L9uoaMZm84Q/)
 
 * evaluation result
@@ -37,7 +37,7 @@ I will be creating models for the following areas of image recognition.
     * data: PascalVOC
     * input_size: (512, 512)
     * backbone: ResNet50
-* [train log](./results/fcos_r50_voc_h512_w512/20220213_014940.log)
+* [train log](./results/detection/fcos_r50_voc_h512_w512/20220213_014940.log)
 * [tensorboard](https://tensorboard.dev/experiment/8FZPdiPcQ2u0mWC9BCkRRQ/)
 
 * evaluation result
@@ -62,7 +62,7 @@ I will be creating models for the following areas of image recognition.
     * data: PascalVOC
     * input_size: (512, 512)
     * backbone: EfficientNet-B0
-* [train log](./results/efficientdet_d0_voc_h512_w512/20220221_061306.log)
+* [train log](./results/detection/efficientdet_d0_voc_h512_w512/20220221_061306.log)
 * [tensorboard](https://tensorboard.dev/experiment/iX8bElLxTmCNATwxRRZ5gg/)
 
 * evaluation result
@@ -86,7 +86,7 @@ I will be creating models for the following areas of image recognition.
     * data: PascalVOC
     * input_size: (512, 512)
     * backbone: EfficientNet-B2
-* [train log](./results/efficientdet_d2_voc_h512_w512/20220218_231837.log)
+* [train log](./results/detection/efficientdet_d2_voc_h512_w512/20220218_231837.log)
 * [tensorboard](https://tensorboard.dev/experiment/GELXEVWeTySJ0xIerrYDRw/)
 
 * evaluation result
@@ -110,7 +110,7 @@ I will be creating models for the following areas of image recognition.
     * data: PascalVOC
     * input_size: (512, 512)
     * backbone: EfficientNet-B2
-* [train log](./results/efficientdet_d4_voc_h512_w512/20220219_234845.log)
+* [train log](./results/detection/efficientdet_d4_voc_h512_w512/20220219_234845.log)
 * [tensorboard](https://tensorboard.dev/experiment/J3O6XDsOT2eZy47u7zWbWg/)
 
 * evaluation result

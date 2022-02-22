@@ -6,7 +6,7 @@ __variables:
   - &n_classes 20
 
 __particular_variables:
-  - &stage_channels [32, 64, 128, 256, 512]
+  - &stage_channels [64, 128, 256, 512, 1024]
 
 framework:
   type: SemSeg
