@@ -1,6 +1,7 @@
 # develop
 .vscode
 .env
+memo.ipynb
 
 # build
 *.egg-info
@@ -8,6 +9,7 @@
 # data
 data
 *.pth
+results/test
 
 # cache
 __pycache__

@@ -45,6 +45,8 @@ class MeanIoU(Metric):
         max_len = max(len(v) for v in self.labelmap.values())
         for i in range(1, self.n_classes):
             lines.append(f'{self.labelmap[i]:{max_len}}: {ious[i-1]:.04f}\n')
+        name = 'mean'
+        lines.append(f'{name:{max_len}}: {ious.mean():.04f}\n')
         text = ''.join(lines)
 
         return {
