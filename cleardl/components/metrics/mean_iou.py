@@ -29,7 +29,7 @@ class MeanIoU(Metric):
         valid = targets > 0
         preds, targets = preds[valid], targets[valid]
 
-        class_ids = torch.arange(self.n_classes, device=self.device)
+        class_ids = torch.arange(self.n_classes, device=preds.device)
         preds = preds.unsqueeze(1).repeat(1, self.n_classes) == class_ids
         targets = targets.unsqueeze(1).repeat(1, self.n_classes) == class_ids
 
