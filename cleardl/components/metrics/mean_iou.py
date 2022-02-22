@@ -1,4 +1,5 @@
 import torch
+import json
 from torchmetrics import Metric
 
 
@@ -12,12 +13,12 @@ class MeanIoU(Metric):
         mean iou(s)
     """
 
-    def __init__(self, n_classes: int, classwise: bool = False, class_names: list = None):
+    def __init__(self, n_classes: int, labelmap_path: str):
         super().__init__()
 
         self.n_classes = n_classes  # include background
-        self.classwise = classwise
-        self.class_names = class_names
+        with open(labelmap_path, 'r') as f:
+            self.labelmap = json.load(f, object_hook=lambda d: {int(k): v for k, v in d.items()})
         self.add_state('inters', default=torch.zeros(n_classes-1), dist_reduce_fx='sum')
         self.add_state('unions', default=torch.zeros(n_classes-1), dist_reduce_fx='sum')
 
@@ -38,9 +39,15 @@ class MeanIoU(Metric):
         self.inters += inters[1:]
         self.unions += unions[1:]
 
-    def compute(self):
-        if self.classwise:
-            ious = torch.div(self.inters, self.unions).cpu().numpy()
-            return {f'@{n}': v for n, v in zip(self.class_names, ious)}
-        else:
-            return torch.div(self.inters, self.unions).mean().item()
+    def compute(self) -> dict:
+        lines = []
+        ious = torch.div(self.inters, self.unions).cpu().numpy()
+        max_len = max(len(v) for v in self.labelmap.values())
+        for i in range(1, self.n_classes):
+            lines.append(f'{self.labelmap[i]:{max_len}}: {ious[i-1]:.04f}\n')
+        text = ''.join(lines)
+
+        return {
+            'text': text,
+            'mIoU': torch.div(self.inters, self.unions).mean().item()
+        }

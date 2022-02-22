@@ -43,6 +43,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
+import json
 
 size_wh = (1024, 512)
 id2id = np.zeros((34, 20))
@@ -55,6 +56,29 @@ data_dir = Path('./data/cityscapes')
 dst_data_dir = Path('./data/cityscapes_ss')
 pathlists_dir = Path('./data/cityscapes_ss/pathlists')
 pathlists_dir.mkdir(exist_ok=True, parents=True)
+
+with open('./data/cityscapes_ss/info.json', 'w') as f:
+    json.dump({
+        1: 'road',
+        2: 'sidewalk',
+        3: 'building',
+        4: 'wall',
+        5: 'fence',
+        6: 'pole',
+        7: 'trafficlight',
+        8: 'trafficsign',
+        9: 'vegetation',
+        10: 'terrain',
+        11: 'sky',
+        12: 'person',
+        13: 'rider',
+        14: 'car',
+        15: 'truck',
+        16: 'bus',
+        17: 'train',
+        18: 'motorcycle',
+        19: 'bicycle'}, f, indent=4
+    )
 
 for phase in ['train', 'val']:
     src_image_dir = Path(f'./data/cityscapes/leftImg8bit/{phase}')

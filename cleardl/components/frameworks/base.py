@@ -20,49 +20,21 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.scheduler = scheduler
         self.metrics = metrics
 
-        self._results = {'train': {}, 'val': {}}
-        self._checkpoints = {}
-        self._last_epoch = 0
-        self._run_eval = False
+        self.results = {'train': {}, 'val': {}}
+        self.checkpoints = {}
+        self.last_epoch = 0
+        self.run_eval = False
 
-        self._train_loss = 0
-        self._train_counts = 0
-        self._val_loss = 0
-        self._val_counts = 0
-
-    @property
-    def run_eval(self):
-        return self._run_eval
-
-    @run_eval.setter
-    def run_eval(self, run_eval):
-        self._run_eval = run_eval
+        self.train_loss = 0
+        self.train_counts = 0
+        self.val_loss = 0
+        self.val_counts = 0
 
     def classwise_eval_(self, classwise_eval: bool):
         for k, m in self.metrics.items():
             if hasattr(m, 'classwise'):
                 m.classwise = classwise_eval
                 print(f'{k} will be a classwise metric')
-
-    @property
-    def results(self):
-        return self._results
-
-    @property
-    def checkpoints(self):
-        return self._checkpoints
-
-    @property
-    def last_epoch(self):
-        return self._last_epoch
-
-    @property
-    def train_loss(self):
-        return self._train_loss
-
-    @property
-    def val_loss(self):
-        return self._val_loss
 
     @abstractmethod
     def epoch_start(self):
@@ -100,7 +72,7 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self._last_epoch = state_dict['epoch']
 
     def view_metrics(self):
-        for name, v in self._results['val'].items():
+        for name, v in self.results['val'].items():
             if 'Metric' in name:
                 print(f'{name}:\n{v}')
 

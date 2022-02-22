@@ -5,14 +5,14 @@ from .base import BaseFramework
 
 class Detection(BaseFramework):
     def epoch_start(self):
-        self._train_loss = 0
-        self._train_counts = 0
-        self._val_loss = 0
-        self._val_counts = 0
-        self._results = {'train': {}, 'val': {}}
+        self.train_loss = 0
+        self.train_counts = 0
+        self.val_loss = 0
+        self.val_counts = 0
+        self.results = {'train': {}, 'val': {}}
 
         for i, lr in enumerate(sorted(set(self.scheduler.get_last_lr()))):
-            self._results['train'][f'LearningRate/lr_{i}'] = lr
+            self.results['train'][f'LearningRate/lr_{i}'] = lr
 
     def train_step(self, data: tuple):
         self.optimizer.zero_grad()
@@ -28,14 +28,14 @@ class Detection(BaseFramework):
         self.optimizer.step()
         # self.scaler.step(self.optimizer)
         # self.scaler.update()
-        self._train_loss += loss * images.size(0)
-        self._train_counts += images.size(0)
+        self.train_loss += loss * images.size(0)
+        self.train_counts += images.size(0)
 
     def train_step_end(self):
-        self._train_loss = (self._train_loss / self._train_counts).item()
-        del self._train_counts
-        self._results['train']['Loss/compare'] = self._train_loss
-        self._results['train']['Loss/train'] = self._train_loss
+        self.train_loss = (self.train_loss / self.train_counts).item()
+        del self.train_counts
+        self.results['train']['Loss/compare'] = self.train_loss
+        self.results['train']['Loss/train'] = self.train_loss
         self.scheduler.step()
 
     def val_step(self, data: tuple):
@@ -43,28 +43,28 @@ class Detection(BaseFramework):
         images, targets = images.to(self.device), tuple(t.to(self.device) for t in targets)
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
-        self._val_loss += loss * images.size(0)
-        self._val_counts += images.size(0)
-        if self._run_eval:
+        self.val_loss += loss * images.size(0)
+        self.val_counts += images.size(0)
+        if self.run_eval:
             preds = self.model.predict(outputs)
             self.metrics.update(preds, metas)
 
     def val_step_end(self):
-        self._val_loss = (self._val_loss / self._val_counts).item()
-        del self._val_counts
-        self._results['val']['Loss/compare'] = self._val_loss
-        self._results['val']['Loss/val'] = self._val_loss
-        if self._run_eval:
+        self.val_loss = (self.val_loss / self.val_counts).item()
+        del self.val_counts
+        self.results['val']['Loss/compare'] = self.val_loss
+        self.results['val']['Loss/val'] = self.val_loss
+        if self.run_eval:
             for name, val in self.metrics.compute().items():
                 if isinstance(val, dict):
                     for k, v in val.items():
-                        self._results['val'][f'Metric/{name}{k}'] = v
+                        self.results['val'][f'Metric/{name}{k}'] = v
                 else:
-                    self._results['val'][f'Metric/{name}'] = val
+                    self.results['val'][f'Metric/{name}'] = val
             self.metrics.reset()
 
     def epoch_end(self):
-        self._checkpoints = {
+        self.checkpoints = {
             'weights': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'scheduler': self.scheduler.state_dict()
