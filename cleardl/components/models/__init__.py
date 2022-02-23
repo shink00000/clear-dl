@@ -3,6 +3,7 @@ from .detectors.fcos import FCOS
 from .detectors.retinanet import RetinaNet
 from .detectors.efficientdet import EfficientDet
 from .segmentors.unet import UNet
+from .segmentors.pspnet import PSPNet
 
 MODELS = {
     'ResNet': ResNet,
@@ -10,4 +11,5 @@ MODELS = {
     'RetinaNet': RetinaNet,
     'EfficientDet': EfficientDet,
     'UNet': UNet,
+    'PSPNet': PSPNet
 }

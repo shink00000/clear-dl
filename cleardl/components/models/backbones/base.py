@@ -19,7 +19,7 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
         Dict[int, torch.Tensor]: {3: out_3, 4: out_4, 5: out_5} (example)
     """
 
-    def __init__(self, feat_sizes: list, out_channels: int, extra_mode: str = 'conv',
+    def __init__(self, feat_sizes: list, out_channels: int = 64, extra_mode: str = 'conv',
                  max_size: int = 5, align_channel: bool = True, **kwargs):
         super().__init__()
         assert extra_mode in ('conv', 'pool')
@@ -39,6 +39,8 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
         feats = self._forward(x)
         if self.align_channel:
             feats = self._align(feats)
+        else:
+            feats = {fsize: feats[fsize] for fsize in self.feat_sizes}
         return feats
 
     @abstractmethod
@@ -62,11 +64,15 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
     def _build(self, **kwargs) -> None:
         pass
 
-    def _build_aligner(self, out_channels: int):
+    def get_channels(self) -> dict:
         with torch.no_grad():
             X = 2 ** self.max_size
             feats = self._forward(torch.rand(2, 3, X, X))
             feat_channels = {fsize: feat.size(1) for fsize, feat in feats.items()}
+        return feat_channels
+
+    def _build_aligner(self, out_channels: int):
+        feat_channels = self.get_channels()
         self.aligner = nn.ModuleDict()
         for fsize in self.feat_sizes:
             if fsize <= self.max_size:
