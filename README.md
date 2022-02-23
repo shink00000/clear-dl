@@ -158,5 +158,6 @@ I will be creating models for the following areas of image recognition.
     train       : 0.3538
     motorcycle  : 0.1962
     bicycle     : 0.6706
+
     mean        : 0.6005
     ```
