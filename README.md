@@ -128,3 +128,35 @@ I will be creating models for the following areas of image recognition.
     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.569
     Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.748
     ```
+
+## SemSeg Models
+### [UNet](https://arxiv.org/abs/1505.04597)
+* [config](./configs/semseg/unet_m_citys_h512_w1024.yaml)
+    * data: CityScapes
+    * input_size: (512, 1024)
+* [train log](./results/semseg/unet_m_citys_h512_w1024/20220222_131257.log)
+* [tensorboard](https://tensorboard.dev/experiment/RVygNz7FQUmva0GBSX0erw/)
+
+* evaluation result
+    ```
+    road        : 0.9610
+    sidewalk    : 0.7411
+    building    : 0.8854
+    wall        : 0.3637
+    fence       : 0.3999
+    pole        : 0.5338
+    trafficlight: 0.5578
+    trafficsign : 0.6601
+    vegetation  : 0.9055
+    terrain     : 0.5247
+    sky         : 0.9236
+    person      : 0.7062
+    rider       : 0.3835
+    car         : 0.9152
+    truck       : 0.3006
+    bus         : 0.4276
+    train       : 0.3538
+    motorcycle  : 0.1962
+    bicycle     : 0.6706
+    mean        : 0.6005
+    ```

@@ -1,0 +1,168 @@
+[Epoch 10][Metric/MeanIoUtext]:
+road        : 0.9327
+sidewalk    : 0.6068
+building    : 0.7794
+wall        : 0.0349
+fence       : 0.0777
+pole        : 0.2556
+trafficlight: 0.0987
+trafficsign : 0.2248
+vegetation  : 0.8320
+terrain     : 0.3296
+sky         : 0.8557
+person      : 0.4129
+rider       : 0.0000
+car         : 0.7739
+truck       : 0.0000
+bus         : 0.0020
+train       : 0.0000
+motorcycle  : 0.0000
+bicycle     : 0.3738
+
+[Epoch 20][Metric/MeanIoUtext]:
+road        : 0.9464
+sidewalk    : 0.6412
+building    : 0.8189
+wall        : 0.0933
+fence       : 0.1828
+pole        : 0.3654
+trafficlight: 0.2232
+trafficsign : 0.3124
+vegetation  : 0.8544
+terrain     : 0.4355
+sky         : 0.8493
+person      : 0.5087
+rider       : 0.0000
+car         : 0.8288
+truck       : 0.0000
+bus         : 0.1497
+train       : 0.0020
+motorcycle  : 0.0000
+bicycle     : 0.4998
+
+[Epoch 30][Metric/MeanIoUtext]:
+road        : 0.9523
+sidewalk    : 0.6871
+building    : 0.8374
+wall        : 0.0687
+fence       : 0.2178
+pole        : 0.4503
+trafficlight: 0.3150
+trafficsign : 0.5196
+vegetation  : 0.8726
+terrain     : 0.4224
+sky         : 0.8890
+person      : 0.4983
+rider       : 0.0050
+car         : 0.8569
+truck       : 0.0000
+bus         : 0.3249
+train       : 0.0045
+motorcycle  : 0.0007
+bicycle     : 0.5415
+
+[Epoch 40][Metric/MeanIoUtext]:
+road        : 0.9511
+sidewalk    : 0.6652
+building    : 0.8186
+wall        : 0.0783
+fence       : 0.3022
+pole        : 0.4778
+trafficlight: 0.4195
+trafficsign : 0.5218
+vegetation  : 0.8586
+terrain     : 0.4830
+sky         : 0.7749
+person      : 0.6175
+rider       : 0.1937
+car         : 0.8607
+truck       : 0.0153
+bus         : 0.2633
+train       : 0.1922
+motorcycle  : 0.0001
+bicycle     : 0.5843
+
+[Epoch 50][Metric/MeanIoUtext]:
+road        : 0.9573
+sidewalk    : 0.7474
+building    : 0.8828
+wall        : 0.3109
+fence       : 0.3792
+pole        : 0.5160
+trafficlight: 0.5214
+trafficsign : 0.6556
+vegetation  : 0.9044
+terrain     : 0.5369
+sky         : 0.9230
+person      : 0.6939
+rider       : 0.3551
+car         : 0.9114
+truck       : 0.2419
+bus         : 0.4228
+train       : 0.2995
+motorcycle  : 0.1147
+bicycle     : 0.6607
+
+[Epoch 60][Metric/MeanIoUtext]:
+road        : 0.9597
+sidewalk    : 0.7491
+building    : 0.8815
+wall        : 0.3302
+fence       : 0.3690
+pole        : 0.5251
+trafficlight: 0.5269
+trafficsign : 0.6435
+vegetation  : 0.9033
+terrain     : 0.5238
+sky         : 0.9208
+person      : 0.6981
+rider       : 0.3760
+car         : 0.9111
+truck       : 0.2833
+bus         : 0.4324
+train       : 0.2864
+motorcycle  : 0.1500
+bicycle     : 0.6702
+
+[Epoch 70][Metric/MeanIoUtext]:
+road        : 0.9607
+sidewalk    : 0.7561
+building    : 0.8847
+wall        : 0.3561
+fence       : 0.3996
+pole        : 0.5417
+trafficlight: 0.5518
+trafficsign : 0.6577
+vegetation  : 0.9054
+terrain     : 0.5097
+sky         : 0.9236
+person      : 0.7041
+rider       : 0.3675
+car         : 0.9151
+truck       : 0.3025
+bus         : 0.4362
+train       : 0.3550
+motorcycle  : 0.1881
+bicycle     : 0.6767
+
+[Epoch 75][Metric/MeanIoUtext]:
+road        : 0.9610
+sidewalk    : 0.7411
+building    : 0.8854
+wall        : 0.3637
+fence       : 0.3999
+pole        : 0.5338
+trafficlight: 0.5578
+trafficsign : 0.6601
+vegetation  : 0.9055
+terrain     : 0.5247
+sky         : 0.9236
+person      : 0.7062
+rider       : 0.3835
+car         : 0.9152
+truck       : 0.3006
+bus         : 0.4276
+train       : 0.3538
+motorcycle  : 0.1962
+bicycle     : 0.6706
+
