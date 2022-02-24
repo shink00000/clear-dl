@@ -5,11 +5,12 @@ import numpy as np
 
 class Branch(nn.Sequential):
     def __init__(self, in_channels: int, out_channels: int):
-        super().__init__()
-        self.add_module('0', nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False))
-        self.add_module('1', nn.BatchNorm2d(out_channels))
-        self.add_module('2', nn.ReLU(inplace=True))
-        self.add_module('3', nn.Dropout2d(0.1))
+        super().__init__(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(0.1)
+        )
 
 
 class PSPHead(nn.Module):
@@ -37,3 +38,6 @@ class PSPHead(nn.Module):
                         nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))
                     else:
                         nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1.0)
+                nn.init.constant_(m.bias, 0.0)

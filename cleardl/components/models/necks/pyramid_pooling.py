@@ -5,11 +5,12 @@ import torch.nn.functional as F
 
 class PoolingBlock(nn.Sequential):
     def __init__(self, pool_size: int, in_channels: int, out_channels: int):
-        super().__init__()
-        self.add_module('0', nn.AdaptiveAvgPool2d(output_size=pool_size))
-        self.add_module('1', nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False))
-        self.add_module('2', nn.BatchNorm2d(out_channels))
-        self.add_module('3', nn.ReLU(inplace=True))
+        super().__init__(
+            nn.AdaptiveAvgPool2d(output_size=pool_size),
+            nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
 
 
 class PyramidPooling(nn.Module):
@@ -38,3 +39,6 @@ class PyramidPooling(nn.Module):
                 nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1.0)
+                nn.init.constant_(m.bias, 0.0)

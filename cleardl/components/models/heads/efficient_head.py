@@ -62,3 +62,6 @@ class EfficientHead(nn.Module):
                         nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))
                     else:
                         nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1.0)
+                nn.init.constant_(m.bias, 0.0)
