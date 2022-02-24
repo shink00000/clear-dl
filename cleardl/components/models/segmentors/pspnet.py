@@ -16,6 +16,7 @@ class PSPNet(nn.Module):
         backbone.update({'feat_sizes': feat_sizes, 'align_channel': False})
         self.backbone = build_backbone(backbone)
 
+        self.aux_id, self.x_id = feat_sizes
         channels = self.backbone.get_channels()
         aux_channels, bout_channels = [channels[fsize] for fsize in feat_sizes]
         mid_channels = 512
@@ -29,7 +30,7 @@ class PSPNet(nn.Module):
     def forward(self, x):
         _, _, H, W = x.size()
         feats = self.backbone(x)
-        x, aux = feats[max(feats)], feats[min(feats)]
+        x, aux = feats[self.x_id], feats[self.aux_id]
         x = self.neck(x)
         x, aux = self.head(x, aux)
         out = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
