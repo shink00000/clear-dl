@@ -25,14 +25,12 @@ class Branch(nn.Sequential):
 
 
 class DeepLabV3PlusHead(nn.Module):
-    def __init__(self, in_channels_list: list, mid_channels_list: int, n_classes: int):
+    def __init__(self, in_channels: int, low_in_channels: int, n_classes: int):
         super().__init__()
-        low_in_channels, x_in_channels = in_channels_list
-        low_out_channels, x_mid_channels = mid_channels_list
-
+        low_out_channels = 48
         self.low_proj = LowLevelProjection(low_in_channels, low_out_channels)
-        self.cls_branch = Branch(x_in_channels+low_out_channels, x_mid_channels)
-        self.cls_top = nn.Conv2d(x_mid_channels, n_classes, kernel_size=1)
+        self.cls_branch = Branch(in_channels+low_out_channels, in_channels)
+        self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=1)
 
         self._init_weights()
 

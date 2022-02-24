@@ -7,6 +7,8 @@ __variables:
 
 __particular_variables:
   - &feat_sizes [2, 5]
+  - &dilation [false, true, true]
+  - &rates [1, 12, 24, 36]
 
 framework:
   type: SemSeg
@@ -43,8 +45,9 @@ model:
     depth: 50
     weights: default
     frozen_stages: 1
-    replace_stride_with_dilation: [false, true, true]
+    replace_stride_with_dilation: *dilation
   n_classes: *n_classes
+  rates: *rates
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean }
 

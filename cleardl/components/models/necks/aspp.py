@@ -43,9 +43,9 @@ class Projection(nn.Sequential):
 
 
 class ASPP(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, rates: list):
         super().__init__()
-        r1, r2, r3, r4 = (1, 12, 24, 36)
+        r1, r2, r3, r4 = rates
         self.d1 = ConvBlock(r1, in_channels, out_channels)
         self.d2 = ConvBlock(r2, in_channels, out_channels)
         self.d3 = ConvBlock(r3, in_channels, out_channels)
