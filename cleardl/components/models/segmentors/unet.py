@@ -70,7 +70,7 @@ class UNet(nn.Module):
 
     def _init_weights(self):
         for name, m in self.named_modules():
-            if isinstance(m, nn.Conv2d):
+            if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
                 nn.init.xavier_uniform_(m.weight, gain=1.0)
                 if m.bias is not None:
                     if 'cls_top' in name:

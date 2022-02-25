@@ -65,3 +65,51 @@ class EfficientHead(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1.0)
                 nn.init.constant_(m.bias, 0.0)
+
+
+class UpConvBlock(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__(
+            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2,
+                               padding=1, output_padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.SiLU(inplace=True)
+        )
+
+
+class EfficientSegHead(nn.Module):
+    def __init__(self, feat_sizes: list, in_channels: int, n_classes: int, output_size: list):
+        super().__init__()
+        self.feat_sizes = feat_sizes
+
+        for fsize in feat_sizes:
+            setattr(self, f'uc{fsize}', UpConvBlock(in_channels, in_channels))
+        self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=3, padding=1)
+        self.up = nn.UpsamplingBilinear2d(output_size)
+
+        self._init_weights()
+
+    def forward(self, feats: dict):
+        x = None
+        for fsize in sorted(self.feat_sizes, reverse=True):
+            if x is None:
+                x = feats[fsize]
+            else:
+                x = feats[fsize] + x
+            x = getattr(self, f'uc{fsize}')(x)
+        x = self.cls_top(x)
+        out = self.up(x)
+        return out
+
+    def _init_weights(self):
+        for name, m in self.named_modules():
+            if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+                nn.init.normal_(m.weight, mean=0.0, std=0.01)
+                if m.bias is not None:
+                    if 'cls_top' in name:
+                        nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))
+                    else:
+                        nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1.0)
+                nn.init.constant_(m.bias, 0.0)
