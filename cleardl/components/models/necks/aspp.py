@@ -37,8 +37,8 @@ class OutBlock(nn.Sequential):
             nn.ReLU(inplace=True)
         )
 
-    def forward(self, outs: tuple):
-        out = torch.cat(outs, dim=1)
+    def forward(self, outputs: tuple):
+        out = torch.cat(outputs, dim=1)
         return super().forward(out)
 
 

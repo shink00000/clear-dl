@@ -14,17 +14,19 @@ class Branch(nn.Sequential):
 
 
 class AuxiliaryHead(nn.Module):
-    def __init__(self, in_channels: int, n_classes: int):
+    def __init__(self, in_channels: int, n_classes: int, size: list):
         super().__init__()
         channels = 256
         self.aux_branch = Branch(in_channels, channels)
         self.aux_top = nn.Conv2d(channels, n_classes, kernel_size=1)
+        self.up = nn.UpsamplingBilinear2d(size)
 
         self._init_weights()
 
     def forward(self, x: torch.Tensor):
         x = self.aux_branch(x)
-        out = self.aux_top(x)
+        x = self.aux_top(x)
+        out = self.up(x)
         return out
 
     def _init_weights(self):

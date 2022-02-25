@@ -47,6 +47,7 @@ model:
     replace_stride_with_dilation: [false, true, true]
   bins: *bins
   n_classes: *n_classes
+  output_size: *size
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean }
     aux_loss: { type: CrossEntropyLoss, reduction: mean }

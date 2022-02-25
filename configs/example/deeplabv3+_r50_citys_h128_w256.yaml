@@ -47,6 +47,7 @@ model:
     frozen_stages: 1
     replace_stride_with_dilation: *dilation
   n_classes: *n_classes
+  output_size: *size
   bins: *bins
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean }

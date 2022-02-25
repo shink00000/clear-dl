@@ -10,7 +10,8 @@ from ..losses import build_loss
 
 
 class DeepLabV3Plus(nn.Module):
-    def __init__(self, feat_sizes: list, backbone: dict, bins: list, n_classes: int, criterion: dict):
+    def __init__(self, feat_sizes: list, backbone: dict, bins: list, n_classes: int, output_size: list,
+                 criterion: dict):
         super().__init__()
         assert len(feat_sizes) == 3
 
@@ -22,23 +23,18 @@ class DeepLabV3Plus(nn.Module):
         low_in_channels, aux_in_channels, in_channels = [channels[fsize] for fsize in feat_sizes]
         out_channels = 256
         self.neck = ASPP(in_channels, out_channels, bins)
-        self.head = DeepLabV3PlusHead(out_channels, low_in_channels, n_classes)
-        self.aux_head = AuxiliaryHead(aux_in_channels, n_classes)
+        self.head = DeepLabV3PlusHead(out_channels, low_in_channels, n_classes, output_size)
+        self.aux_head = AuxiliaryHead(aux_in_channels, n_classes, output_size)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
 
     def forward(self, x):
-        _, _, H, W = x.size()
         feats = self.backbone(x)
         low, aux, x = feats[self.low_id], feats[self.aux_id], feats[self.x_id]
         x = self.neck(x)
-        x = self.head(x, low)
-        out = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
-
-        # auxiliary
-        aux = self.aux_head(aux)
-        aux_out = F.interpolate(aux, size=(H, W), mode='bilinear', align_corners=True)
+        out = self.head(x, low)
+        aux_out = self.aux_head(aux)
 
         return out, aux_out
 

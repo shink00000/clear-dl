@@ -30,13 +30,14 @@ class MergeBlock(nn.Sequential):
 
 
 class DeepLabV3PlusHead(nn.Module):
-    def __init__(self, in_channels: int, low_in_channels: int, n_classes: int):
+    def __init__(self, in_channels: int, low_in_channels: int, n_classes: int, size: list):
         super().__init__()
         low_out_channels = 48
         self.lowlevel = LowLevelBlock(low_in_channels, low_out_channels)
         self.merge = MergeBlock(in_channels+low_out_channels, in_channels)
         self.drop = nn.Dropout2d(0.1)
         self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=1)
+        self.up = nn.UpsamplingBilinear2d(size)
 
         self._init_weights()
 
@@ -44,8 +45,9 @@ class DeepLabV3PlusHead(nn.Module):
         low = self.lowlevel(low)
         x = self.merge(x, low)
         x = self.drop(x)
-        cls_outs = self.cls_top(x)
-        return cls_outs
+        x = self.cls_top(x)
+        out = self.up(x)
+        return out
 
     def _init_weights(self):
         for name, m in self.named_modules():
