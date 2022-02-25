@@ -17,8 +17,8 @@ class PSPNet(nn.Module):
         backbone.update({'feat_sizes': feat_sizes, 'align_channel': False})
         self.backbone = build_backbone(backbone)
 
-        self.aux_id, self.x_id = feat_sizes
         channels = self.backbone.get_channels()
+        self.aux_id, self.x_id = feat_sizes
         aux_in_channels, in_channels = [channels[fsize] for fsize in feat_sizes]
         out_channels = 512
         self.neck = PyramidPooling(in_channels, out_channels, bins)
@@ -31,12 +31,15 @@ class PSPNet(nn.Module):
     def forward(self, x):
         _, _, H, W = x.size()
         feats = self.backbone(x)
-        x, aux = feats[self.x_id], feats[self.aux_id]
+        aux, x = feats[self.aux_id], feats[self.x_id]
         x = self.neck(x)
         x = self.head(x)
         out = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
+
+        # auxiliary
         aux = self.aux_head(aux)
         aux_out = F.interpolate(aux, size=(H, W), mode='bilinear', align_corners=True)
+
         return out, aux_out
 
     def loss(self, outputs: tuple, targets: torch.Tensor) -> torch.Tensor:

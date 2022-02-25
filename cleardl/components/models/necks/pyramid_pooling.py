@@ -40,9 +40,9 @@ class PyramidPooling(nn.Module):
         _, _, H, W = x.size()
         outs = [x]
         for bin in self.bins:
-            p = getattr(self, f'pc{bin}')(x)
-            p = F.interpolate(p, size=(H, W), mode='bilinear', align_corners=True)
-            outs.append(p)
+            y = getattr(self, f'pc{bin}')(x)
+            y = F.interpolate(y, size=(H, W), mode='bilinear', align_corners=True)
+            outs.append(y)
         out = self.out_conv(outs)
         return out
 

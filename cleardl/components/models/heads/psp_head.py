@@ -12,7 +12,8 @@ class PSPHead(nn.Module):
         self._init_weights()
 
     def forward(self, x: torch.Tensor):
-        cls_outs = self.cls_top(self.drop(x))
+        x = self.drop(x)
+        cls_outs = self.cls_top(x)
         return cls_outs
 
     def _init_weights(self):
