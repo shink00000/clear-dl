@@ -15,7 +15,7 @@ class PoolingBlock(nn.Sequential):
         )
 
 
-class ConvBlock(nn.Sequential):
+class AtrousConvBlock(nn.Sequential):
     def __init__(self, rate: int, in_channels: int, out_channels: int):
         if rate == 1:
             conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
@@ -29,41 +29,37 @@ class ConvBlock(nn.Sequential):
         )
 
 
-class Projection(nn.Sequential):
+class OutBlock(nn.Sequential):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(p=0.5),
-            SeparatableConv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True)
         )
+
+    def forward(self, outs: tuple):
+        out = torch.cat(outs, dim=1)
+        return super().forward(out)
 
 
 class ASPP(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, rates: list):
+    def __init__(self, in_channels: int, out_channels: int, bins: list):
         super().__init__()
-        r1, r2, r3, r4 = rates
-        self.d1 = ConvBlock(r1, in_channels, out_channels)
-        self.d2 = ConvBlock(r2, in_channels, out_channels)
-        self.d3 = ConvBlock(r3, in_channels, out_channels)
-        self.d4 = ConvBlock(r4, in_channels, out_channels)
         self.pool = PoolingBlock(1, in_channels, out_channels)
-        self.proj = Projection(5*out_channels, out_channels)
+        self.bins = bins
+        for bin in self.bins:
+            setattr(self, f'ac{bin}', AtrousConvBlock(bin, in_channels, out_channels))
+        self.out_conv = OutBlock((len(self.bins)+1)*out_channels, out_channels)
 
         self._init_weights()
 
     def forward(self, x):
         _, _, H, W = x.size()
-        d1 = self.d1(x)
-        d2 = self.d2(x)
-        d3 = self.d3(x)
-        d4 = self.d4(x)
-        p = F.interpolate(self.pool(x), size=(H, W), mode='bilinear', align_corners=True)
-        out = torch.cat([d1, d2, d3, d4, p], dim=1)
-        out = self.proj(out)
+        outs = [F.interpolate(self.pool(x), size=(H, W), mode='bilinear', align_corners=True)]
+        for bin in self.bins:
+            y = getattr(self, f'ac{bin}')(x)
+            outs.append(y)
+        out = self.out_conv(outs)
         return out
 
     def _init_weights(self):

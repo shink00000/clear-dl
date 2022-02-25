@@ -6,9 +6,9 @@ __variables:
   - &n_classes 20
 
 __particular_variables:
-  - &feat_sizes [2, 5]
+  - &feat_sizes [2, 4, 5]
   - &dilation [false, false, true]
-  - &rates [1, 6, 12, 18]
+  - &bins [1, 6, 12, 18]
 
 framework:
   type: SemSeg
@@ -47,9 +47,10 @@ model:
     frozen_stages: 1
     replace_stride_with_dilation: *dilation
   n_classes: *n_classes
-  rates: *rates
+  bins: *bins
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean }
+    aux_loss: { type: CrossEntropyLoss, reduction: mean }
 
 optimizer:
   type: SGD
