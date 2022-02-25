@@ -64,8 +64,8 @@ class FCOS(nn.Module):
 
         return loss
 
-    def predict(self, outs: tuple) -> tuple:
-        reg_outs, cls_outs, cnt_outs = outs
+    def predict(self, outputs: tuple) -> tuple:
+        reg_outs, cls_outs, cnt_outs = outputs
         bboxes = self.distance2bbox(reg_outs)
         scores = cls_outs.sigmoid() * cnt_outs.sigmoid()
         bboxes, scores, class_ids = self.postprocess(bboxes, scores)

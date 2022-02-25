@@ -74,8 +74,8 @@ class EfficientDet(nn.Module):
 
         return loss
 
-    def predict(self, outs: tuple) -> tuple:
-        reg_outs, cls_outs = outs
+    def predict(self, outputs: tuple) -> tuple:
+        reg_outs, cls_outs = outputs
         bboxes = box_convert(self.delta2bbox(reg_outs), 'cxcywh', 'xyxy')
         scores = cls_outs.sigmoid()
         bboxes, scores, class_ids = self.postprocess(bboxes, scores)
