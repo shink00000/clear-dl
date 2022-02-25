@@ -5,11 +5,12 @@ import torch.nn.functional as F
 from ..backbones import build_backbone
 from ..necks.pyramid_pooling import PyramidPooling
 from ..heads.psp_head import PSPHead
+from ..heads.auxiliary_head import AuxiliaryHead
 from ..losses import build_loss
 
 
 class PSPNet(nn.Module):
-    def __init__(self, feat_sizes: list, backbone: dict, n_classes: int, criterion: dict):
+    def __init__(self, feat_sizes: list, backbone: dict, bins: list, n_classes: int, criterion: dict):
         super().__init__()
         assert len(feat_sizes) == 2
 
@@ -18,11 +19,11 @@ class PSPNet(nn.Module):
 
         self.aux_id, self.x_id = feat_sizes
         channels = self.backbone.get_channels()
-        aux_channels, bout_channels = [channels[fsize] for fsize in feat_sizes]
-        mid_channels = 512
-        aux_mid_channels = 256
-        self.neck = PyramidPooling(bout_channels, mid_channels)
-        self.head = PSPHead(bout_channels+4*mid_channels, aux_channels, mid_channels, aux_mid_channels, n_classes)
+        aux_in_channels, in_channels = [channels[fsize] for fsize in feat_sizes]
+        out_channels = 512
+        self.neck = PyramidPooling(in_channels, out_channels, bins)
+        self.head = PSPHead(out_channels, n_classes)
+        self.aux_head = AuxiliaryHead(aux_in_channels, n_classes)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
@@ -32,8 +33,9 @@ class PSPNet(nn.Module):
         feats = self.backbone(x)
         x, aux = feats[self.x_id], feats[self.aux_id]
         x = self.neck(x)
-        x, aux = self.head(x, aux)
+        x = self.head(x)
         out = F.interpolate(x, size=(H, W), mode='bilinear', align_corners=True)
+        aux = self.aux_head(aux)
         aux_out = F.interpolate(aux, size=(H, W), mode='bilinear', align_corners=True)
         return out, aux_out
 

@@ -13,24 +13,37 @@ class PoolingBlock(nn.Sequential):
         )
 
 
+class OutBlock(nn.Sequential):
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, outs: tuple):
+        out = torch.cat(outs, dim=1)
+        return super().forward(out)
+
+
 class PyramidPooling(nn.Module):
-    def __init__(self, in_channels, mid_channels):
+    def __init__(self, in_channels: int, out_channels: int, bins: list):
         super().__init__()
-        self.pc6 = PoolingBlock(6, in_channels, mid_channels)
-        self.pc3 = PoolingBlock(3, in_channels, mid_channels)
-        self.pc2 = PoolingBlock(2, in_channels, mid_channels)
-        self.pc1 = PoolingBlock(1, in_channels, mid_channels)
+        self.bins = bins
+        for bin in self.bins:
+            setattr(self, f'pc{bin}', PoolingBlock(bin, in_channels, out_channels))
+        self.out_conv = OutBlock(in_channels+len(self.bins)*out_channels, out_channels)
 
         self._init_weights()
 
     def forward(self, x):
         _, _, H, W = x.size()
-        p6 = F.interpolate(self.pc6(x), size=(H, W), mode='bilinear', align_corners=True)
-        p3 = F.interpolate(self.pc3(x), size=(H, W), mode='bilinear', align_corners=True)
-        p2 = F.interpolate(self.pc2(x), size=(H, W), mode='bilinear', align_corners=True)
-        p1 = F.interpolate(self.pc1(x), size=(H, W), mode='bilinear', align_corners=True)
-
-        out = torch.cat([x, p6, p3, p2, p1], dim=1)
+        outs = [x]
+        for bin in self.bins:
+            p = getattr(self, f'pc{bin}')(x)
+            p = F.interpolate(p, size=(H, W), mode='bilinear', align_corners=True)
+            outs.append(p)
+        out = self.out_conv(outs)
         return out
 
     def _init_weights(self):
