@@ -80,11 +80,11 @@ class RandomCrop(nn.Module):
 
     def forward(self, dc: dict) -> dict:
         _, h, w = dc['image'].shape
-        wh = torch.Tensor([w, h])
-        whcrop = torch.Tensor([self.crop_w, self.crop_h])
-        xymin = (wh - whcrop) * torch.rand(1)
+        wh = torch.tensor([w, h], dtype=torch.int32)
+        whcrop = torch.tensor([self.crop_w, self.crop_h], dtype=torch.int32)
+        xymin = ((wh - whcrop) * torch.rand(1)).int()
         xymax = xymin + whcrop
-        (l, t), (r, b) = xymin.int(), xymax.int()
+        (l, t), (r, b) = xymin, xymax
 
         dc['image'] = dc['image'][:, t:b, l:r]
         if 'bboxes' in dc:
