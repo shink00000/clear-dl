@@ -1,7 +1,7 @@
 from torchvision.transforms import Compose
 
 from .color import PhotoMetricDistortion, Normalize
-from .geometry import RandomExpand, RandomMinIoUCrop, RandomHorizontalFlip, Resize, RandomMinAreaCrop
+from .geometry import RandomExpand, RandomMinIoUCrop, RandomHorizontalFlip, Resize, RandomCrop
 from .dropout import PixelwiseCutOff
 
 from ...models.detectors.fcos import FCOSEncoder
@@ -13,7 +13,7 @@ TRANSFORMS = {
     'Normalize': Normalize,
     'RandomExpand': RandomExpand,
     'RandomMinIoUCrop': RandomMinIoUCrop,
-    'RandomMinAreaCrop': RandomMinAreaCrop,
+    'RandomCrop': RandomCrop,
     'RandomHorizontalFlip': RandomHorizontalFlip,
     'Resize': Resize,
     'PixelwiseCutOff': PixelwiseCutOff

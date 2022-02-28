@@ -13,43 +13,44 @@ class MeanIoU(Metric):
         mean iou(s)
     """
 
-    def __init__(self, n_classes: int, labelmap_path: str):
+    def __init__(self, n_classes: int, labelmap_path: str, ignore_index: int = -1):
         super().__init__()
 
-        self.n_classes = n_classes  # include background
+        self.n_classes = n_classes
         with open(labelmap_path, 'r') as f:
             self.labelmap = json.load(f, object_hook=lambda d: {int(k): v for k, v in d.items()})
-        self.add_state('inters', default=torch.zeros(n_classes-1), dist_reduce_fx='sum')
-        self.add_state('unions', default=torch.zeros(n_classes-1), dist_reduce_fx='sum')
+        self.length = max(len(v) for v in self.labelmap.values())
+        self.ignore_index = ignore_index
+
+        self.add_state('cm', default=torch.zeros(n_classes, n_classes), dist_reduce_fx='sum')
 
     def update(self, preds: torch.Tensor, targets: torch.Tensor):
         preds = preds.argmax(dim=1).flatten()
         targets = targets.flatten()
 
-        valid = targets > 0
+        valid = targets != self.ignore_index
         preds, targets = preds[valid], targets[valid]
 
-        class_ids = torch.arange(self.n_classes, device=preds.device)
-        preds = preds.unsqueeze(1).repeat(1, self.n_classes) == class_ids
-        targets = targets.unsqueeze(1).repeat(1, self.n_classes) == class_ids
-
-        inters = (preds * targets).sum(dim=0)
-        unions = preds.sum(dim=0) + targets.sum(dim=0) - inters
-
-        self.inters += inters[1:].cpu()
-        self.unions += unions[1:].cpu()
+        counts = (targets * self.n_classes + preds).bincount(minlength=self.n_classes**2)
+        cm = counts.reshape(self.n_classes, self.n_classes)
+        self.cm += cm.cpu()
 
     def compute(self) -> dict:
+        tp = self.cm.diag()
+        fp = self.cm.sum(dim=1) - tp
+        fn = self.cm.sum(dim=0) - tp
+
+        ious = torch.div(tp, tp + fp + fn).numpy()
+
         lines = []
-        ious = torch.div(self.inters, self.unions).cpu().numpy()
-        max_len = max(len(v) for v in self.labelmap.values())
-        for i in range(1, self.n_classes):
-            lines.append(f'{self.labelmap[i]:{max_len}}: {ious[i-1]:.04f}\n')
+        for i in range(self.n_classes):
+            line = f'{self.labelmap[i]:{self.length}}: {ious[i]:.04f}\n'
+            lines.append(line)
         name = 'mean'
-        lines.append(f'\n{name:{max_len}}: {ious.mean():.04f}\n')
-        text = ''.join(lines)
+        line = f'\n{name:{self.length}}: {ious.mean():.04f}\n'
+        lines.append(line)
 
         return {
-            'text': text,
-            'mIoU': torch.div(self.inters, self.unions).mean().item()
+            'text': ''.join(lines),
+            'mIoU': ious.mean()
         }

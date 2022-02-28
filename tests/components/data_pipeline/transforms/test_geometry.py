@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 from pathlib import Path
 
 from cleardl.components.data_pipeline.transforms.geometry import (
-    RandomExpand, RandomMinIoUCrop, RandomHorizontalFlip, Resize, RandomMinAreaCrop
+    RandomExpand, RandomMinIoUCrop, RandomHorizontalFlip, Resize, RandomCrop
 )
 
 
@@ -59,10 +59,10 @@ def test_random_min_iou_crop():
         image.save(Path(__file__).parent/f'test_random_min_iou_crop_{n}.png')
 
 
-def test_random_min_area_crop():
+def test_random_crop():
     for n in range(10):
-        image = base_function(RandomMinAreaCrop(min_areas=[0.3, 0.5, 0.9], p=1))
-        image.save(Path(__file__).parent/f'test_random_min_area_crop_{n}.png')
+        image = base_function(RandomCrop(size=[128, 128]))
+        image.save(Path(__file__).parent/f'test_random_crop_{n}.png')
 
 
 def test_random_horizontal_flip():
@@ -73,3 +73,6 @@ def test_random_horizontal_flip():
 def test_resize():
     image = base_function(Resize(size=[128, 128]))
     image.save(Path(__file__).parent/'test_resize.png')
+    for i in range(10):
+        image = base_function(Resize(scale_range=[0.5, 2.0]))
+        image.save(Path(__file__).parent/f'test_resize_{i}.png')

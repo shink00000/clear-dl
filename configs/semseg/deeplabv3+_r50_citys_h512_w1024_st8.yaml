@@ -22,9 +22,8 @@ data_pipeline:
       train:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: RandomExpand, ratio_range: [1.0, 2.0] }
-        - { type: RandomMinAreaCrop, min_areas: [0.3, 0.5, 0.7, 0.9] }
-        - { type: Resize, size: *size }
+        - { type: Resize, scale_range: [1.0, 4.0] }
+        - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
         - { type: PixelwiseCutOff, p: [0.0, 0.15] }
       val:
@@ -50,8 +49,8 @@ model:
   output_size: *size
   bins: *bins
   criterion:
-    cls_loss: { type: CrossEntropyLoss, reduction: mean }
-    aux_loss: { type: CrossEntropyLoss, reduction: mean }
+    cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
@@ -76,3 +75,4 @@ metrics:
   - type: MeanIoU
     n_classes: *n_classes
     labelmap_path: ./data/cityscapes_ss/info.json
+    ignore_index: 255
