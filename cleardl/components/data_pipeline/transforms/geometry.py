@@ -80,9 +80,9 @@ class RandomCrop(nn.Module):
 
     def forward(self, dc: dict) -> dict:
         _, h, w = dc['image'].shape
-        wh = torch.tensor([w, h], dtype=torch.int32)
+        wh = torch.Tensor([w, h])
         whcrop = torch.tensor([self.crop_w, self.crop_h], dtype=torch.int32)
-        xymin = ((wh - whcrop) * torch.rand(1)).int()
+        xymin = ((wh - whcrop) * torch.rand(2)).int()
         xymax = xymin + whcrop
         (l, t), (r, b) = xymin, xymax
 
