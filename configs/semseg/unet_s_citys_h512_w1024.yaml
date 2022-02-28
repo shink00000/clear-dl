@@ -20,7 +20,7 @@ data_pipeline:
       train:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 4.0] }
+        - { type: Resize, scale_range: [1.0, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
         - { type: PixelwiseCutOff, p: [0.0, 0.05] }
