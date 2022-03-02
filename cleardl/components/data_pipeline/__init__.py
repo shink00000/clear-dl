@@ -28,6 +28,7 @@ class DataPipeline:
             shuffle=True,
             pin_memory=True,
             collate_fn=dataset.collate_fn,
+            drop_last=True,
             **self.dataloader
         )
 
