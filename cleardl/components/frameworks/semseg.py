@@ -16,7 +16,7 @@ class SemSeg(BaseFramework):
 
     def train_step(self, data: tuple):
         self.optimizer.zero_grad()
-        images, targets = data
+        images, targets, *_ = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
@@ -25,16 +25,16 @@ class SemSeg(BaseFramework):
         self.optimizer.step()
         self.train_loss += loss * images.size(0)
         self.train_counts += images.size(0)
+        self.scheduler.step()
 
     def train_step_end(self):
         self.train_loss = (self.train_loss / self.train_counts).item()
         del self.train_counts
         self.results['train']['Loss/compare'] = self.train_loss
         self.results['train']['Loss/train'] = self.train_loss
-        self.scheduler.step()
 
     def val_step(self, data: tuple):
-        images, targets = data
+        images, targets, metas = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
@@ -42,7 +42,7 @@ class SemSeg(BaseFramework):
         self.val_counts += images.size(0)
         if self.run_eval:
             preds = self.model.predict(outputs)
-            self.metrics.update(preds, targets)
+            self.metrics.update(preds, metas)
 
     def val_step_end(self):
         self.val_loss = (self.val_loss / self.val_counts).item()

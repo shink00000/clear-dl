@@ -22,10 +22,10 @@ data_pipeline:
       train:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 2.0] }
+        - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
-        - { type: PixelwiseCutOff, p: [0.0, 0.15] }
+        - { type: PixelwiseCutOff, p: [0.0, 0.1] }
       val:
         - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, size: *size }
@@ -33,7 +33,7 @@ data_pipeline:
         - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, size: *size }
   dataloader:
-    batch_size: 4
+    batch_size: 2
     num_workers: 2
 
 model:
@@ -45,9 +45,9 @@ model:
     weights: default
     frozen_stages: 1
     replace_stride_with_dilation: *dilation
+  bins: *bins
   n_classes: *n_classes
   output_size: *size
-  bins: *bins
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
@@ -65,11 +65,10 @@ optimizer:
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupMultiStepLR
-  milestones: [40, 60]
-  gamma: 0.1
-  warmup_interval: 3
-  warmup_start_factor: 0.3
+  type: PolynomialScheduler
+  min_factor: 0.01
+  gamma: 0.9
+  n_iterations: 40000
 
 metrics:
   - type: MeanIoU

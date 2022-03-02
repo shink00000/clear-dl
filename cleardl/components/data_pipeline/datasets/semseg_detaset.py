@@ -45,10 +45,11 @@ class SemSegDataset(Dataset):
             'image': to_tensor(Image.open(image_path)),
             'label': torch.from_numpy(np.array(Image.open(label_path), copy=True, dtype=np.long))
         }
+        meta = data_container['label'].clone()
         data_container = self.transforms(data_container)
         image = data_container['image']
         label = data_container['label']
-        return image, label
+        return image, label, meta
 
     def _create_data_list(self, phase: str, data_dir: str):
         data_list = []

@@ -4,13 +4,13 @@ import numpy as np
 from tqdm import tqdm
 import json
 import pandas as pd
+from shutil import copy
 
 df = pd.read_csv(Path(__file__).parent/'cityscapes_labels.csv')
 mapping = {id: train_id for id, train_id in zip(df['id'].values, df['trainId'].values)}
 
 func = np.vectorize(lambda x: mapping[x].astype(np.uint8))
 
-size_wh = (1024, 512)
 data_dir = Path('./data/cityscapes')
 dst_data_dir = Path('./data/cityscapes_ss')
 pathlists_dir = Path('./data/cityscapes_ss/pathlists')
@@ -48,11 +48,10 @@ for phase in ['train', 'val']:
         dst_image_path.parent.mkdir(exist_ok=True, parents=True)
         dst_label_path.parent.mkdir(exist_ok=True, parents=True)
 
-        image = Image.open(image_path).resize(size_wh, Image.BILINEAR)
-        label = Image.open(label_path).resize(size_wh, Image.NEAREST)
+        label = Image.open(label_path)
         label = Image.fromarray(func(np.array(label)))
 
-        image.save(dst_image_path)
+        copy(image_path, dst_image_path)
         label.save(dst_label_path)
 
         dst_image_path = dst_image_path.relative_to(dst_data_dir).as_posix()

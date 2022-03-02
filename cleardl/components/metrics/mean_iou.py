@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import json
 from torchmetrics import Metric
 
@@ -7,7 +8,7 @@ class MeanIoU(Metric):
     """
     Inputs:
         preds  : (N, C, H, W) pixelwise probability map
-        targets: (N, H, W) pixelwise label
+        metas: (N, H, W) pixelwise label
 
     Outputs:
         mean iou(s)
@@ -24,16 +25,17 @@ class MeanIoU(Metric):
 
         self.add_state('cm', default=torch.zeros(n_classes, n_classes), dist_reduce_fx='sum')
 
-    def update(self, preds: torch.Tensor, targets: torch.Tensor):
+    def update(self, preds: torch.Tensor, metas: torch.Tensor):
+        preds = F.interpolate(preds.cpu(), size=metas.shape[1:], mode='bilinear', align_corners=True)
         preds = preds.argmax(dim=1).flatten()
-        targets = targets.flatten()
+        metas = metas.flatten()
 
-        valid = targets != self.ignore_index
-        preds, targets = preds[valid], targets[valid]
+        valid = metas != self.ignore_index
+        preds, metas = preds[valid], metas[valid]
 
-        counts = (targets * self.n_classes + preds).bincount(minlength=self.n_classes**2)
+        counts = (metas * self.n_classes + preds).bincount(minlength=self.n_classes**2)
         cm = counts.reshape(self.n_classes, self.n_classes)
-        self.cm += cm.cpu()
+        self.cm += cm
 
     def compute(self) -> dict:
         tp = self.cm.diag()
