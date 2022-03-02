@@ -6,7 +6,7 @@ from torchvision.models import (
     resnet101
 )
 
-from .base import BaseBackBone
+from .basebackbone import BaseBackBone
 
 
 class ResNet(BaseBackBone):

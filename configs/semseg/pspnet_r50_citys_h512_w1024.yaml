@@ -24,7 +24,6 @@ data_pipeline:
         - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
-        - { type: PixelwiseCutOff, p: [0.0, 0.1] }
       val:
         - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, size: *size }
@@ -42,7 +41,6 @@ model:
     type: ResNet
     depth: 50
     weights: default
-    frozen_stages: 1
     replace_stride_with_dilation: [false, true, true]
   bins: *bins
   n_classes: *n_classes
@@ -53,12 +51,6 @@ model:
 
 optimizer:
   type: SGD
-  param_args:
-    lr:
-      backbone: 0.1
-      bias: 2.
-    weight_decay:
-      bias: 0.
   lr: 0.01
   momentum: 0.9
   weight_decay: 0.0005

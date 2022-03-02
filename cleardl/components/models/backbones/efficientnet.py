@@ -10,7 +10,7 @@ from torchvision.models import (
     efficientnet_b7,
 )
 
-from .base import BaseBackBone
+from .basebackbone import BaseBackBone
 
 
 class EfficientNet(BaseBackBone):
