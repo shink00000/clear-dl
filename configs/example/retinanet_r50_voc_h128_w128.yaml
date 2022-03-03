@@ -42,15 +42,25 @@ data_pipeline:
 
 model:
   type: RetinaNet
+  input_size: *size
+  feat_levels: *feat_levels
   backbone:
-    type: ResNeXt
+    type: ResNet
     depth: 50
     weights: default
     frozen_stages: 1
-    extra_mode: conv
-  n_classes: *n_classes
-  input_size: *size
-  feat_levels: *feat_levels
+  extra:
+    type: ExtraConv
+    feat_levels: *feat_levels
+    out_channels: &extra_channels 256
+  neck:
+    feat_levels: *feat_levels
+    in_channels: *extra_channels
+    out_channels: &neck_channels 256
+  head:
+    feat_levels: *feat_levels
+    in_channels: *neck_channels
+    n_classes: *n_classes
   criterion:
     reg_loss: { type: SmoothL1Loss, reduction: sum }
     cls_loss: { type: FocalLoss, alpha: 0.25, gamma: 2, reduction: sum }
