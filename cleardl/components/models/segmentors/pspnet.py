@@ -7,6 +7,7 @@ from ..necks.pyramid_pooling import PyramidPooling
 from ..heads.psp_head import PSPHead
 from ..heads.auxiliary_head import AuxiliaryHead
 from ..losses import build_loss
+from ..utils.replace_layer import replace_bn_to_gn
 
 
 class PSPNet(nn.Module):
@@ -22,6 +23,8 @@ class PSPNet(nn.Module):
         self.neck = PyramidPooling(in_channels, out_channels, bins)
         self.head = PSPHead(out_channels, n_classes, output_size)
         self.aux_head = AuxiliaryHead(aux_in_channels, n_classes, output_size)
+
+        replace_bn_to_gn(self)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
