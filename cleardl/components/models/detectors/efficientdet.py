@@ -3,7 +3,8 @@ import torch.nn as nn
 from itertools import product
 from torchvision.ops import box_iou, box_convert
 
-from ..backbones import build_backbone
+from ..backbones import build_backbone, get_channels, get_max_level
+from ..extras import build_extra
 from ..necks.bifpn import BiFPN
 from ..heads.efficient_head import EfficientHead
 from ..losses import build_loss
@@ -11,11 +12,11 @@ from ..postprocesses import build_postprocess
 
 
 class EfficientDet(nn.Module):
-    def __init__(self, size: str, backbone: dict, n_classes: int, input_size: list, feat_levels: list,
-                 criterion: dict, postprocess: dict):
+    def __init__(self, size: str, input_size: list, feat_levels: list, backbone: dict, extra: dict, neck: dict,
+                 head: dict, criterion: dict, postprocess: dict):
         super().__init__()
 
-        # layers
+        # definition by size
         backbone_size, channels, n_bifpn_blocks, n_head_stacks = {
             'd0': ('b0', 64, 3, 3),
             'd1': ('b1', 88, 4, 3),
@@ -26,10 +27,28 @@ class EfficientDet(nn.Module):
             'd6': ('b6', 384, 8, 5),
             'd7': ('b7', 384, 8, 5)
         }[size]
-        backbone.update({'size': backbone_size, 'feat_levels': feat_levels, 'out_channels': channels})
+        backbone.update({'size': backbone_size})
+        extra.update({
+            'out_channels': channels
+        })
+        neck.update({
+            'channels': channels,
+            'n_blocks': n_bifpn_blocks
+        })
+        head.update({
+            'in_channels': channels,
+            'n_stacks': n_head_stacks
+        })
+
+        # layers
         self.backbone = build_backbone(backbone)
-        self.neck = BiFPN(feat_levels, channels, n_bifpn_blocks)
-        self.head = EfficientHead(feat_levels, channels, n_classes, n_head_stacks)
+        extra.update({
+            'in_channels': get_channels(self.backbone, feat_levels),
+            'max_level': get_max_level(self.backbone)
+        })
+        self.extra = build_extra(extra)
+        self.neck = BiFPN(**neck)
+        self.head = EfficientHead(**head)
 
         # property
         H, W = input_size
@@ -38,9 +57,9 @@ class EfficientDet(nn.Module):
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):
                 for aspect in [0.5, 1.0, 2.0]:
-                    for size in [0, 1/3, 2/3]:
-                        h = 4 * stride * pow(2, size) * pow(aspect, 1/2)
-                        w = 4 * stride * pow(2, size) * pow(1/aspect, 1/2)
+                    for scale in [0, 1/3, 2/3]:
+                        h = 4 * stride * pow(2, scale) * pow(aspect, 1/2)
+                        w = 4 * stride * pow(2, scale) * pow(1/aspect, 1/2)
                         prior_boxes.append([cx, cy, w, h])
         self.prior_boxes = nn.Parameter(torch.Tensor(prior_boxes), requires_grad=False)
 
@@ -53,6 +72,7 @@ class EfficientDet(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
+        x = self.extra(x)
         x = self.neck(x)
         outs = self.head(x)
         return outs
@@ -99,9 +119,9 @@ class EfficientEncoder(nn.Module):
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):
                 for aspect in [0.5, 1.0, 2.0]:
-                    for size in [0, 1/3, 2/3]:
-                        h = 4 * stride * pow(2, size) * pow(aspect, 1/2)
-                        w = 4 * stride * pow(2, size) * pow(1/aspect, 1/2)
+                    for scale in [0, 1/3, 2/3]:
+                        h = 4 * stride * pow(2, scale) * pow(aspect, 1/2)
+                        w = 4 * stride * pow(2, scale) * pow(1/aspect, 1/2)
                         prior_boxes.append([cx, cy, w, h])
         self.prior_boxes = torch.Tensor(prior_boxes)
         self.neg_thresh, self.pos_thresh = iou_threshs
