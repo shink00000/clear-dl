@@ -15,9 +15,9 @@ class Branch(nn.Sequential):
 
 
 class RetinaHead(nn.Module):
-    def __init__(self, feat_sizes: list, in_channels: int, n_classes: int, n_stacks: int = 4):
+    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, n_stacks: int = 4):
         super().__init__()
-        self.feat_sizes = feat_sizes
+        self.feat_levels = feat_levels
         self.n_classes = n_classes
         self.reg_branch = Branch(in_channels, n_stacks)
         self.cls_branch = Branch(in_channels, n_stacks)
@@ -28,9 +28,9 @@ class RetinaHead(nn.Module):
 
     def forward(self, feats: dict):
         reg_outs, cls_outs = [], []
-        for fsize in self.feat_sizes:
-            reg_feat = self.reg_branch(feats[fsize])
-            cls_feat = self.cls_branch(feats[fsize])
+        for level in self.feat_levels:
+            reg_feat = self.reg_branch(feats[level])
+            cls_feat = self.cls_branch(feats[level])
             reg_out = self.reg_top(reg_feat)
             cls_out = self.cls_top(cls_feat)
             reg_outs.append(reg_out.permute(0, 2, 3, 1).reshape(reg_out.size(0), -1, 4))

@@ -36,20 +36,20 @@ class FPN(nn.Module):
         Dict[int, torch.Tensor]: {3: out_3, 4: out_4, 5: out_5, ...}
     """
 
-    def __init__(self, feat_sizes: list, channels: int):
+    def __init__(self, feat_levels: list, channels: int):
         super().__init__()
-        self.feat_sizes = feat_sizes
-        for fsize in feat_sizes:
-            setattr(self, f'feat_{fsize}', TopDownGate(channels))
+        self.feat_levels = feat_levels
+        for level in feat_levels:
+            setattr(self, f'feat_{level}', TopDownGate(channels))
 
         self._init_weights()
 
     def forward(self, feats: dict) -> dict:
         out_feats = {}
         cur_feat = None
-        for fsize in sorted(self.feat_sizes, reverse=True):
-            cur_feat = getattr(self, f'feat_{fsize}')(x=feats[fsize], x_above=cur_feat)
-            out_feats[fsize] = cur_feat
+        for level in sorted(self.feat_levels, reverse=True):
+            cur_feat = getattr(self, f'feat_{level}')(x=feats[level], x_above=cur_feat)
+            out_feats[level] = cur_feat
         return out_feats
 
     def _init_weights(self):

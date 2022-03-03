@@ -16,7 +16,7 @@ from .basebackbone import BaseBackBone
 class EfficientNet(BaseBackBone):
 
     def __init__(self, *args, **kwargs):
-        self.pickup_id_to_fsize = {
+        self.pickup_id_to_level = {
             1: 1,
             2: 2,
             3: 3,
@@ -56,6 +56,6 @@ class EfficientNet(BaseBackBone):
         feats = {}
         for i, m in enumerate(self.features):
             x = m(x)
-            if i in self.pickup_id_to_fsize:
-                feats[self.pickup_id_to_fsize[i]] = x
+            if i in self.pickup_id_to_level:
+                feats[self.pickup_id_to_level[i]] = x
         return feats

@@ -11,7 +11,7 @@ from ..postprocesses import build_postprocess
 
 
 class EfficientDet(nn.Module):
-    def __init__(self, size: str, backbone: dict, n_classes: int, input_size: list, feat_sizes: list,
+    def __init__(self, size: str, backbone: dict, n_classes: int, input_size: list, feat_levels: list,
                  criterion: dict, postprocess: dict):
         super().__init__()
 
@@ -26,14 +26,14 @@ class EfficientDet(nn.Module):
             'd6': ('b6', 384, 8, 5),
             'd7': ('b7', 384, 8, 5)
         }[size]
-        backbone.update({'size': backbone_size, 'feat_sizes': feat_sizes, 'out_channels': channels})
+        backbone.update({'size': backbone_size, 'feat_levels': feat_levels, 'out_channels': channels})
         self.backbone = build_backbone(backbone)
-        self.neck = BiFPN(feat_sizes, channels, n_bifpn_blocks)
-        self.head = EfficientHead(feat_sizes, channels, n_classes, n_head_stacks)
+        self.neck = BiFPN(feat_levels, channels, n_bifpn_blocks)
+        self.head = EfficientHead(feat_levels, channels, n_classes, n_head_stacks)
 
         # property
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         prior_boxes = []
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):
@@ -91,10 +91,10 @@ class EfficientDet(nn.Module):
 
 
 class EfficientEncoder(nn.Module):
-    def __init__(self, input_size: list, feat_sizes: list, iou_threshs: tuple = (0.4, 0.5)):
+    def __init__(self, input_size: list, feat_levels: list, iou_threshs: tuple = (0.4, 0.5)):
         super().__init__()
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         prior_boxes = []
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):

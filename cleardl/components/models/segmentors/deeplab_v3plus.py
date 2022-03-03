@@ -10,17 +10,17 @@ from ..losses import build_loss
 
 
 class DeepLabV3Plus(nn.Module):
-    def __init__(self, feat_sizes: list, backbone: dict, bins: list, n_classes: int, output_size: list,
+    def __init__(self, feat_levels: list, backbone: dict, bins: list, n_classes: int, output_size: list,
                  criterion: dict):
         super().__init__()
-        assert len(feat_sizes) == 3
+        assert len(feat_levels) == 3
 
-        backbone.update({'feat_sizes': feat_sizes, 'align_channel': False})
+        backbone.update({'feat_levels': feat_levels, 'align_channel': False})
         self.backbone = build_backbone(backbone)
 
         channels = self.backbone.get_channels()
-        self.low_id, self.aux_id, self.x_id = feat_sizes
-        low_in_channels, aux_in_channels, in_channels = [channels[fsize] for fsize in feat_sizes]
+        self.low_id, self.aux_id, self.x_id = feat_levels
+        low_in_channels, aux_in_channels, in_channels = [channels[level] for level in feat_levels]
         out_channels = 256
         self.neck = ASPP(in_channels, out_channels, bins)
         self.head = DeepLabV3PlusHead(out_channels, low_in_channels, n_classes, output_size)

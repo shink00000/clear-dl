@@ -23,17 +23,17 @@ def update_branch(branch: nn.Module, base_branch: nn.Module):
 
 
 class EfficientHead(nn.Module):
-    def __init__(self, feat_sizes: list, in_channels: int, n_classes: int, n_stacks: int = 4):
+    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, n_stacks: int = 4):
         super().__init__()
-        self.feat_sizes = feat_sizes
+        self.feat_levels = feat_levels
         self.n_classes = n_classes
 
         for type in ['reg', 'cls']:
             base_branch = Branch(in_channels, n_stacks)
-            for fsize in feat_sizes:
+            for level in feat_levels:
                 branch = Branch(in_channels, n_stacks)
                 update_branch(branch, base_branch)
-                setattr(self, f'{type}_branch_feat_{fsize}', branch)
+                setattr(self, f'{type}_branch_feat_{level}', branch)
         self.reg_top = nn.Conv2d(in_channels, 9*4, kernel_size=3, padding=1)
         self.cls_top = nn.Conv2d(in_channels, 9*n_classes, kernel_size=3, padding=1)
 
@@ -41,9 +41,9 @@ class EfficientHead(nn.Module):
 
     def forward(self, feats: dict):
         reg_outs, cls_outs = [], []
-        for fsize in self.feat_sizes:
-            reg_feat = getattr(self, f'reg_branch_feat_{fsize}')(feats[fsize])
-            cls_feat = getattr(self, f'cls_branch_feat_{fsize}')(feats[fsize])
+        for level in self.feat_levels:
+            reg_feat = getattr(self, f'reg_branch_feat_{level}')(feats[level])
+            cls_feat = getattr(self, f'cls_branch_feat_{level}')(feats[level])
             reg_out = self.reg_top(reg_feat)
             cls_out = self.cls_top(cls_feat)
             reg_outs.append(reg_out.permute(0, 2, 3, 1).reshape(reg_out.size(0), -1, 4))
@@ -78,12 +78,12 @@ class UpConvBlock(nn.Sequential):
 
 
 class EfficientSegHead(nn.Module):
-    def __init__(self, feat_sizes: list, in_channels: int, n_classes: int, output_size: list):
+    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, output_size: list):
         super().__init__()
-        self.feat_sizes = feat_sizes
+        self.feat_levels = feat_levels
 
-        for fsize in feat_sizes:
-            setattr(self, f'uc{fsize}', UpConvBlock(in_channels, in_channels))
+        for level in feat_levels:
+            setattr(self, f'uc{level}', UpConvBlock(in_channels, in_channels))
         self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=3, padding=1)
         self.up = nn.UpsamplingBilinear2d(output_size)
 
@@ -91,12 +91,12 @@ class EfficientSegHead(nn.Module):
 
     def forward(self, feats: dict):
         x = None
-        for fsize in sorted(self.feat_sizes, reverse=True):
+        for level in sorted(self.feat_levels, reverse=True):
             if x is None:
-                x = feats[fsize]
+                x = feats[level]
             else:
-                x = feats[fsize] + x
-            x = getattr(self, f'uc{fsize}')(x)
+                x = feats[level] + x
+            x = getattr(self, f'uc{level}')(x)
         x = self.cls_top(x)
         out = self.up(x)
         return out

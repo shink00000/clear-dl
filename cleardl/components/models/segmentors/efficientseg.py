@@ -9,7 +9,7 @@ from ..losses import build_loss
 
 
 class EfficientSeg(nn.Module):
-    def __init__(self, size: str, backbone: dict, n_classes: int, feat_sizes: list, output_size: list,
+    def __init__(self, size: str, backbone: dict, n_classes: int, feat_levels: list, output_size: list,
                  criterion: dict):
         super().__init__()
 
@@ -24,10 +24,10 @@ class EfficientSeg(nn.Module):
             'd6': ('b6', 384, 8, 5),
             'd7': ('b7', 384, 8, 5)
         }[size]
-        backbone.update({'size': backbone_size, 'feat_sizes': feat_sizes, 'out_channels': channels})
+        backbone.update({'size': backbone_size, 'feat_levels': feat_levels, 'out_channels': channels})
         self.backbone = build_backbone(backbone)
-        self.neck = BiFPN(feat_sizes, channels, n_bifpn_blocks)
-        self.head = EfficientSegHead(feat_sizes, channels, n_classes, output_size)
+        self.neck = BiFPN(feat_levels, channels, n_bifpn_blocks)
+        self.head = EfficientSegHead(feat_levels, channels, n_classes, output_size)
 
         # loss
         self.cls_loss = build_loss(criterion['cls_loss'])

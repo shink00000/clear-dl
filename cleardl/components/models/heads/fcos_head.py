@@ -28,9 +28,9 @@ class Branch(nn.Sequential):
 
 
 class FCOSHead(nn.Module):
-    def __init__(self, feat_sizes: list, in_channels: int, n_classes: int, n_stacks: int = 4):
+    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, n_stacks: int = 4):
         super().__init__()
-        self.feat_sizes = feat_sizes
+        self.feat_levels = feat_levels
         self.n_classes = n_classes
         self.reg_branch = Branch(in_channels, n_stacks)
         self.cls_branch = Branch(in_channels, n_stacks)
@@ -38,16 +38,16 @@ class FCOSHead(nn.Module):
         self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=3, padding=1)
         self.cnt_top = nn.Conv2d(in_channels, 1, kernel_size=3, padding=1)
 
-        self.scales = nn.ModuleDict({f'feat_{fsize}': Scale(1.0) for fsize in feat_sizes})
+        self.scales = nn.ModuleDict({f'feat_{level}': Scale(1.0) for level in feat_levels})
 
         self._init_weights()
 
     def forward(self, feats: dict):
         reg_outs, cls_outs, cnt_outs = [], [], []
-        for fsize in self.feat_sizes:
-            reg_feat = self.reg_branch(feats[fsize])
-            cls_feat = self.cls_branch(feats[fsize])
-            reg_out = self.scales[f'feat_{fsize}'](self.reg_top(reg_feat)).exp()
+        for level in self.feat_levels:
+            reg_feat = self.reg_branch(feats[level])
+            cls_feat = self.cls_branch(feats[level])
+            reg_out = self.scales[f'feat_{level}'](self.reg_top(reg_feat)).exp()
             cls_out = self.cls_top(cls_feat)
             cnt_out = self.cnt_top(cls_feat)
             reg_outs.append(reg_out.permute(0, 2, 3, 1).flatten(1, 2))

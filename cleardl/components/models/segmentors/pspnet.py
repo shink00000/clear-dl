@@ -13,7 +13,7 @@ class PSPNet(nn.Module):
     def __init__(self, backbone: dict, bins: list, n_classes: int, output_size: list, criterion: dict):
         super().__init__()
 
-        backbone.update({'feat_sizes': [4, 5], 'align_channel': False})
+        backbone.update({'feat_levels': [4, 5], 'align_channel': False})
         self.backbone = build_backbone(backbone)
 
         channels = self.backbone.get_channels()

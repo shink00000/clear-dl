@@ -6,7 +6,7 @@ __variables:
   - &n_classes 20
 
 __particular_variables:
-  - &feat_sizes [3, 4, 5, 6, 7]
+  - &feat_levels [3, 4, 5, 6, 7]
 
 framework:
   type: Detection
@@ -34,7 +34,7 @@ data_pipeline:
     encoder:
       type: FCOSEncoder
       input_size: *size
-      feat_sizes: *feat_sizes
+      feat_levels: *feat_levels
   dataloader:
     batch_size: 8
     num_workers: 2
@@ -49,7 +49,7 @@ model:
     extra_mode: conv
   n_classes: *n_classes
   input_size: *size
-  feat_sizes: *feat_sizes
+  feat_levels: *feat_levels
   criterion:
     reg_loss: { type: IoULossWithDistance, reduction: sum }
     cls_loss: { type: FocalLoss, alpha: 0.25, gamma: 2, reduction: sum }

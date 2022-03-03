@@ -53,38 +53,38 @@ class BottomUpGate(nn.Module):
 
 
 class BiFPNBlock(nn.Module):
-    def __init__(self, feat_sizes: list, channels: int):
+    def __init__(self, feat_levels: list, channels: int):
         super().__init__()
-        self.feat_sizes = feat_sizes
-        for fsize in feat_sizes[:-1]:
-            setattr(self, f'top_down_feat_{fsize}', TopDownGate(channels))
-        for fsize in feat_sizes[1:]:
-            setattr(self, f'bottom_up_feat_{fsize}', BottomUpGate(channels))
+        self.feat_levels = feat_levels
+        for level in feat_levels[:-1]:
+            setattr(self, f'top_down_feat_{level}', TopDownGate(channels))
+        for level in feat_levels[1:]:
+            setattr(self, f'bottom_up_feat_{level}', BottomUpGate(channels))
 
     def forward(self, feats: dict):
         out_feats, mid_feats = {}, {}
         cur_feat = None
-        for fsize in sorted(self.feat_sizes, reverse=True):
+        for level in sorted(self.feat_levels, reverse=True):
             if cur_feat is None:
-                cur_feat = feats[fsize]
+                cur_feat = feats[level]
                 # not register the top feat to mid_feats
             else:
-                cur_feat = getattr(self, f'top_down_feat_{fsize}')(
-                    x=feats[fsize],
+                cur_feat = getattr(self, f'top_down_feat_{level}')(
+                    x=feats[level],
                     x_above=cur_feat
                 )
-                mid_feats[fsize] = cur_feat
+                mid_feats[level] = cur_feat
         cur_feat = None
-        for fsize in sorted(self.feat_sizes, reverse=False):
+        for level in sorted(self.feat_levels, reverse=False):
             if cur_feat is None:
-                cur_feat = mid_feats[fsize]
+                cur_feat = mid_feats[level]
             else:
-                cur_feat = getattr(self, f'bottom_up_feat_{fsize}')(
-                    x=feats[fsize],
+                cur_feat = getattr(self, f'bottom_up_feat_{level}')(
+                    x=feats[level],
                     x_below=cur_feat,
-                    x_mid=mid_feats.get(fsize, None),
+                    x_mid=mid_feats.get(level, None),
                 )
-            out_feats[fsize] = cur_feat
+            out_feats[level] = cur_feat
         return out_feats
 
 
@@ -110,10 +110,10 @@ class BiFPN(nn.Sequential):
         Dict[int, torch.Tensor]: {3: out_3, 4: out_4, 5: out_5, ...}
     """
 
-    def __init__(self, feat_sizes: list, channels: int, n_blocks: int = 3):
+    def __init__(self, feat_levels: list, channels: int, n_blocks: int = 3):
         super().__init__()
         for i in range(n_blocks):
-            self.add_module(str(i), BiFPNBlock(feat_sizes, channels))
+            self.add_module(str(i), BiFPNBlock(feat_levels, channels))
 
         self._init_weights()
 

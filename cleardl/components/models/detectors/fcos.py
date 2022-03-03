@@ -10,20 +10,20 @@ from ..postprocesses import build_postprocess
 
 
 class FCOS(nn.Module):
-    def __init__(self, backbone: dict, n_classes: int, input_size: list, feat_sizes: list,
+    def __init__(self, backbone: dict, n_classes: int, input_size: list, feat_levels: list,
                  criterion: dict, postprocess: dict):
         super().__init__()
 
         # layers
         channels = 256
-        backbone.update({'feat_sizes': feat_sizes, 'out_channels': channels})
+        backbone.update({'feat_levels': feat_levels, 'out_channels': channels})
         self.backbone = build_backbone(backbone)
-        self.neck = FPN(feat_sizes, channels)
-        self.head = FCOSHead(feat_sizes, channels, n_classes)
+        self.neck = FPN(feat_levels, channels)
+        self.head = FCOSHead(feat_levels, channels, n_classes)
 
         # property
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         all_points = []
         for stride in strides:
             points = [[x, y] for y, x in product(
@@ -81,11 +81,11 @@ class FCOS(nn.Module):
 
 
 class FCOSEncoder(nn.Module):
-    def __init__(self, input_size: list, feat_sizes: list):
+    def __init__(self, input_size: list, feat_levels: list):
         super().__init__()
         self.INF = 1e8
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         regress_ranges = [[s*4, s*8] for s in strides]
         regress_ranges[0][0], regress_ranges[-1][-1] = -1, self.INF
 

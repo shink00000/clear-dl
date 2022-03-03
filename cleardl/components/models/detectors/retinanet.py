@@ -11,20 +11,20 @@ from ..postprocesses import build_postprocess
 
 
 class RetinaNet(nn.Module):
-    def __init__(self, backbone: dict, n_classes: int, input_size: list, feat_sizes: list,
+    def __init__(self, backbone: dict, n_classes: int, input_size: list, feat_levels: list,
                  criterion: dict, postprocess: dict):
         super().__init__()
 
         # layers
         channels = 256
-        backbone.update({'feat_sizes': feat_sizes, 'out_channels': channels})
+        backbone.update({'feat_levels': feat_levels, 'out_channels': channels})
         self.backbone = build_backbone(backbone)
-        self.neck = FPN(feat_sizes, channels)
-        self.head = RetinaHead(feat_sizes, channels, n_classes)
+        self.neck = FPN(feat_levels, channels)
+        self.head = RetinaHead(feat_levels, channels, n_classes)
 
         # property
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         prior_boxes = []
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):
@@ -82,10 +82,10 @@ class RetinaNet(nn.Module):
 
 
 class RetinaEncoder(nn.Module):
-    def __init__(self, input_size: list, feat_sizes: list, iou_threshs: tuple = (0.4, 0.5)):
+    def __init__(self, input_size: list, feat_levels: list, iou_threshs: tuple = (0.4, 0.5)):
         super().__init__()
         H, W = input_size
-        strides = [2**i for i in feat_sizes]
+        strides = [2**i for i in feat_levels]
         prior_boxes = []
         for stride in strides:
             for cy, cx in product(range(stride//2, H, stride), range(stride//2, W, stride)):

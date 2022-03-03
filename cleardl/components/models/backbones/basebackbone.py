@@ -8,8 +8,8 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
 
     Forward Example:
         1. extract intermediate tensors (= features) from XXXXX
-            - argment 'feat_sizes' means 'feature size' to select
-                - if feature size = n, the HW size of feature tensor is (input_HW / 2 ** n)
+            - argment 'feat_levels' means 'feature level' to select
+                - if feature level = n, the HW size of feature tensor is (input_HW / 2 ** n)
         2. use 1. to generate backbone features
             - if align_channel is True, backbone features must be same channel
             - when creating a smaller feature (that is, a larger feat_size),
@@ -19,12 +19,12 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
         Dict[int, torch.Tensor]: {3: out_3, 4: out_4, 5: out_5} (example)
     """
 
-    def __init__(self, feat_sizes: list, out_channels: int = 64, extra_mode: str = 'conv',
+    def __init__(self, feat_levels: list, out_channels: int = 64, extra_mode: str = 'conv',
                  max_size: int = 5, align_channel: bool = True, **kwargs):
         super().__init__()
         assert extra_mode in ('conv', 'pool')
 
-        self.feat_sizes = feat_sizes
+        self.feat_levels = feat_levels
         self.extra_mode = extra_mode
         self.max_size = max_size
         self.align_channel = align_channel
@@ -40,7 +40,7 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
         if self.align_channel:
             feats = self._align(feats)
         else:
-            feats = {fsize: feats[fsize] for fsize in self.feat_sizes}
+            feats = {level: feats[level] for level in self.feat_levels}
         return feats
 
     @abstractmethod
@@ -49,15 +49,15 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
 
     def _align(self, feats: dict) -> dict:
         out_feats = {}
-        for fsize in self.feat_sizes:
-            if fsize in feats:
-                feat = feats[fsize]
+        for level in self.feat_levels:
+            if level in feats:
+                feat = feats[level]
             elif self.extra_mode == 'conv':
-                feat = feats[self.max_size] if fsize == self.max_size+1 else out_feats[fsize-1]
+                feat = feats[self.max_size] if level == self.max_size+1 else out_feats[level-1]
             elif self.extra_mode == 'pool':
-                feat = out_feats[fsize-1]
-            out_feat = self.aligner[f'feat_{fsize}'](feat)
-            out_feats[fsize] = out_feat
+                feat = out_feats[level-1]
+            out_feat = self.aligner[f'feat_{level}'](feat)
+            out_feats[level] = out_feat
         return out_feats
 
     @abstractmethod
@@ -68,18 +68,18 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
         with torch.no_grad():
             X = 2 ** self.max_size
             feats = self._forward(torch.rand(2, 3, X, X))
-            feat_channels = {fsize: feat.size(1) for fsize, feat in feats.items()}
+            feat_channels = {level: feat.size(1) for level, feat in feats.items()}
         return feat_channels
 
     def _build_aligner(self, out_channels: int):
         feat_channels = self.get_channels()
         self.aligner = nn.ModuleDict()
-        for fsize in self.feat_sizes:
-            if fsize <= self.max_size:
-                align_module = nn.Conv2d(feat_channels[fsize], out_channels, kernel_size=1)
+        for level in self.feat_levels:
+            if level <= self.max_size:
+                align_module = nn.Conv2d(feat_channels[level], out_channels, kernel_size=1)
             else:
                 if self.extra_mode == 'conv':
-                    if fsize == self.max_size+1:
+                    if level == self.max_size+1:
                         align_module = nn.Conv2d(
                             feat_channels[self.max_size], out_channels, kernel_size=3, stride=2, padding=1
                         )
@@ -90,7 +90,7 @@ class BaseBackBone(nn.Module, metaclass=ABCMeta):
                         )
                 elif self.extra_mode == 'pool':
                     align_module = nn.MaxPool2d(2, 2)
-            self.aligner[f'feat_{fsize}'] = align_module
+            self.aligner[f'feat_{level}'] = align_module
 
     def _init_weights(self):
         for name, m in self.named_modules():

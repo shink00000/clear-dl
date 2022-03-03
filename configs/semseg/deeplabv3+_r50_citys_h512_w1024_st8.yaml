@@ -6,7 +6,7 @@ __variables:
   - &n_classes 19
 
 __particular_variables:
-  - &feat_sizes [2, 4, 5]
+  - &feat_levels [2, 4, 5]
   - &dilation [false, true, true]
   - &bins [1, 12, 24, 36]
 
@@ -38,7 +38,7 @@ data_pipeline:
 
 model:
   type: DeepLabV3Plus
-  feat_sizes: *feat_sizes
+  feat_levels: *feat_levels
   backbone:
     type: ResNet
     depth: 50
