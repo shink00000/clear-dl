@@ -6,7 +6,6 @@ __variables:
   - &n_classes 19
 
 __particular_variables:
-  - &feat_sizes [4, 5]
   - &bins [1, 2, 3, 6]
 
 framework:
@@ -36,7 +35,6 @@ data_pipeline:
 
 model:
   type: PSPNet
-  feat_sizes: *feat_sizes
   backbone:
     type: ResNet
     depth: 50

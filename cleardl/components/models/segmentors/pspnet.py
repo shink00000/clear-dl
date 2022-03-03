@@ -10,17 +10,14 @@ from ..losses import build_loss
 
 
 class PSPNet(nn.Module):
-    def __init__(self, feat_sizes: list, backbone: dict, bins: list, n_classes: int, output_size: list,
-                 criterion: dict):
+    def __init__(self, backbone: dict, bins: list, n_classes: int, output_size: list, criterion: dict):
         super().__init__()
-        assert len(feat_sizes) == 2
 
-        backbone.update({'feat_sizes': feat_sizes, 'align_channel': False})
+        backbone.update({'feat_sizes': [4, 5], 'align_channel': False})
         self.backbone = build_backbone(backbone)
 
         channels = self.backbone.get_channels()
-        self.aux_id, self.x_id = feat_sizes
-        aux_in_channels, in_channels = [channels[fsize] for fsize in feat_sizes]
+        aux_in_channels, in_channels = channels[4], channels[5]
         out_channels = 512
         self.neck = PyramidPooling(in_channels, out_channels, bins)
         self.head = PSPHead(out_channels, n_classes, output_size)
@@ -31,7 +28,7 @@ class PSPNet(nn.Module):
 
     def forward(self, x):
         feats = self.backbone(x)
-        aux, x = feats[self.aux_id], feats[self.x_id]
+        aux, x = feats[4], feats[5]
         x = self.neck(x)
         out = self.head(x)
         aux_out = self.aux_head(aux)
