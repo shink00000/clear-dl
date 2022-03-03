@@ -33,7 +33,7 @@ class EfficientHead(nn.Module):
             for level in feat_levels:
                 branch = Branch(in_channels, n_stacks)
                 update_branch(branch, base_branch)
-                setattr(self, f'{type}_branch_feat_{level}', branch)
+                setattr(self, f'{type}_branch_f{level}', branch)
         self.reg_top = nn.Conv2d(in_channels, 9*4, kernel_size=3, padding=1)
         self.cls_top = nn.Conv2d(in_channels, 9*n_classes, kernel_size=3, padding=1)
 
@@ -42,8 +42,8 @@ class EfficientHead(nn.Module):
     def forward(self, feats: dict):
         reg_outs, cls_outs = [], []
         for level in self.feat_levels:
-            reg_feat = getattr(self, f'reg_branch_feat_{level}')(feats[level])
-            cls_feat = getattr(self, f'cls_branch_feat_{level}')(feats[level])
+            reg_feat = getattr(self, f'reg_branch_f{level}')(feats[level])
+            cls_feat = getattr(self, f'cls_branch_f{level}')(feats[level])
             reg_out = self.reg_top(reg_feat)
             cls_out = self.cls_top(cls_feat)
             reg_outs.append(reg_out.permute(0, 2, 3, 1).reshape(reg_out.size(0), -1, 4))

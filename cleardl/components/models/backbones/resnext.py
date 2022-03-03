@@ -8,7 +8,7 @@ from .resnet import ResNet
 
 class ResNeXt(ResNet):
 
-    def _build_base(self, depth: int):
+    def _models(self, depth: int):
         return {
             50: resnext50_32x4d,
             101: resnext101_32x8d,

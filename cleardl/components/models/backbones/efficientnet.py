@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from torchvision.models import (
     efficientnet_b0,
     efficientnet_b1,
@@ -10,26 +11,15 @@ from torchvision.models import (
     efficientnet_b7,
 )
 
-from .basebackbone import BaseBackBone
 
+class EfficientNet(nn.Module):
+    def __init__(self, size: str, weights: str = 'default', frozen_stages: int = -1, **kwargs):
+        super().__init__()
 
-class EfficientNet(BaseBackBone):
-
-    def __init__(self, *args, **kwargs):
-        self.pickup_id_to_level = {
-            1: 1,
-            2: 2,
-            3: 3,
-            5: 4,
-            8: 5
-        }
-        super().__init__(*args, max_size=5, **kwargs)
-
-    def _build(self, size: str, weights: str = 'default', frozen_stages: int = -1, **kwargs):
         if weights == 'default':
-            base = self._build_base(size)(pretrained=True, **kwargs)
+            base = self._models(size)(pretrained=True, **kwargs)
         else:
-            base = self._build_base(size)(pretrained=False, **kwargs)
+            base = self._models(size)(pretrained=False, **kwargs)
             if weights is not None:
                 base.load_state_dict(torch.load(weights, map_location='cpu'))
 
@@ -40,7 +30,16 @@ class EfficientNet(BaseBackBone):
             else:
                 break
 
-    def _build_base(self, size: str):
+    def forward(self, x: torch.Tensor) -> dict:
+        id2level = {1: 1, 2: 2, 3: 3, 5: 4, 8: 5}
+        feats = {}
+        for i, m in enumerate(self.features):
+            x = m(x)
+            if i in id2level:
+                feats[id2level[i]] = x
+        return feats
+
+    def _models(self, size: str):
         return {
             'b0': efficientnet_b0,
             'b1': efficientnet_b1,
@@ -51,11 +50,3 @@ class EfficientNet(BaseBackBone):
             'b6': efficientnet_b6,
             'b7': efficientnet_b7,
         }[size]
-
-    def _forward(self, x: torch.Tensor) -> dict:
-        feats = {}
-        for i, m in enumerate(self.features):
-            x = m(x)
-            if i in self.pickup_id_to_level:
-                feats[self.pickup_id_to_level[i]] = x
-        return feats

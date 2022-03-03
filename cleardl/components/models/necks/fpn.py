@@ -2,9 +2,9 @@ import torch.nn as nn
 
 
 class TopDownGate(nn.Module):
-    def __init__(self, channels: int):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
-        self.out = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.out = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
         self.resize = nn.Upsample(scale_factor=2, mode='nearest')
 
     def forward(self, x, x_above=None):
@@ -36,11 +36,11 @@ class FPN(nn.Module):
         Dict[int, torch.Tensor]: {3: out_3, 4: out_4, 5: out_5, ...}
     """
 
-    def __init__(self, feat_levels: list, channels: int):
+    def __init__(self, feat_levels: list, in_channels: int, out_channels: int):
         super().__init__()
         self.feat_levels = feat_levels
         for level in feat_levels:
-            setattr(self, f'feat_{level}', TopDownGate(channels))
+            setattr(self, f'f{level}', TopDownGate(in_channels, out_channels))
 
         self._init_weights()
 
@@ -48,7 +48,7 @@ class FPN(nn.Module):
         out_feats = {}
         cur_feat = None
         for level in sorted(self.feat_levels, reverse=True):
-            cur_feat = getattr(self, f'feat_{level}')(x=feats[level], x_above=cur_feat)
+            cur_feat = getattr(self, f'f{level}')(x=feats[level], x_above=cur_feat)
             out_feats[level] = cur_feat
         return out_feats
 

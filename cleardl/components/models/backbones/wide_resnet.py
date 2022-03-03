@@ -8,7 +8,7 @@ from .resnet import ResNet
 
 class WideResNet(ResNet):
 
-    def _build_base(self, depth: int):
+    def _models(self, depth: int):
         return {
             50: wide_resnet50_2,
             101: wide_resnet101_2,

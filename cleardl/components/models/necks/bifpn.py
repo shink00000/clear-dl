@@ -57,9 +57,9 @@ class BiFPNBlock(nn.Module):
         super().__init__()
         self.feat_levels = feat_levels
         for level in feat_levels[:-1]:
-            setattr(self, f'top_down_feat_{level}', TopDownGate(channels))
+            setattr(self, f'top_down_f{level}', TopDownGate(channels))
         for level in feat_levels[1:]:
-            setattr(self, f'bottom_up_feat_{level}', BottomUpGate(channels))
+            setattr(self, f'bottom_up_f{level}', BottomUpGate(channels))
 
     def forward(self, feats: dict):
         out_feats, mid_feats = {}, {}
@@ -69,7 +69,7 @@ class BiFPNBlock(nn.Module):
                 cur_feat = feats[level]
                 # not register the top feat to mid_feats
             else:
-                cur_feat = getattr(self, f'top_down_feat_{level}')(
+                cur_feat = getattr(self, f'top_down_f{level}')(
                     x=feats[level],
                     x_above=cur_feat
                 )
@@ -79,7 +79,7 @@ class BiFPNBlock(nn.Module):
             if cur_feat is None:
                 cur_feat = mid_feats[level]
             else:
-                cur_feat = getattr(self, f'bottom_up_feat_{level}')(
+                cur_feat = getattr(self, f'bottom_up_f{level}')(
                     x=feats[level],
                     x_below=cur_feat,
                     x_mid=mid_feats.get(level, None),

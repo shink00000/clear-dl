@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 from itertools import product
 
-from ..backbones import build_backbone
+from ..backbones import build_backbone, get_channels, get_max_level
+from ..extras import build_extra
 from ..necks.fpn import FPN
 from ..heads.fcos_head import FCOSHead
 from ..losses import build_loss
@@ -10,16 +11,19 @@ from ..postprocesses import build_postprocess
 
 
 class FCOS(nn.Module):
-    def __init__(self, backbone: dict, n_classes: int, input_size: list, feat_levels: list,
+    def __init__(self, input_size: list, feat_levels: list, backbone: dict, extra: dict, neck: dict, head: dict,
                  criterion: dict, postprocess: dict):
         super().__init__()
 
         # layers
-        channels = 256
-        backbone.update({'feat_levels': feat_levels, 'out_channels': channels})
         self.backbone = build_backbone(backbone)
-        self.neck = FPN(feat_levels, channels)
-        self.head = FCOSHead(feat_levels, channels, n_classes)
+        extra.update({
+            'in_channels': get_channels(self.backbone, feat_levels),
+            'max_level': get_max_level(self.backbone)
+        })
+        self.extra = build_extra(extra)
+        self.neck = FPN(**neck)
+        self.head = FCOSHead(**head)
 
         # property
         H, W = input_size
@@ -42,6 +46,7 @@ class FCOS(nn.Module):
 
     def forward(self, x):
         x = self.backbone(x)
+        x = self.extra(x)
         x = self.neck(x)
         outs = self.head(x)
         return outs

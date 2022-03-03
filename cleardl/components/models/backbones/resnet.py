@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from torchvision.models import (
     resnet18,
     resnet34,
@@ -6,18 +7,15 @@ from torchvision.models import (
     resnet101
 )
 
-from .basebackbone import BaseBackBone
 
+class ResNet(nn.Module):
+    def __init__(self, depth: int, weights: str = 'default', frozen_stages: int = -1, **kwargs):
+        super().__init__()
 
-class ResNet(BaseBackBone):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, max_size=5, **kwargs)
-
-    def _build(self, depth: int, weights: str = 'default', frozen_stages: int = -1, **kwargs):
         if weights == 'default':
-            base = self._build_base(depth)(pretrained=True, **kwargs)
+            base = self._models(depth)(pretrained=True, **kwargs)
         else:
-            base = self._build_base(depth)(pretrained=False, **kwargs)
+            base = self._models(depth)(pretrained=False, **kwargs)
             if weights is not None:
                 base.load_state_dict(torch.load(weights, map_location='cpu'))
 
@@ -32,15 +30,7 @@ class ResNet(BaseBackBone):
             else:
                 setattr(self, name, m)
 
-    def _build_base(self, depth: int):
-        return {
-            18: resnet18,
-            34: resnet34,
-            50: resnet50,
-            101: resnet101,
-        }[depth]
-
-    def _forward(self, x: torch.Tensor) -> dict:
+    def forward(self, x: torch.Tensor) -> dict:
         feats = {}
         feats[1] = self.relu(self.bn1(self.conv1(x)))
         feats[2] = self.layer1(self.maxpool(feats[1]))
@@ -48,3 +38,11 @@ class ResNet(BaseBackBone):
         feats[4] = self.layer3(feats[3])
         feats[5] = self.layer4(feats[4])
         return feats
+
+    def _models(self, depth: int):
+        return {
+            18: resnet18,
+            34: resnet34,
+            50: resnet50,
+            101: resnet101,
+        }[depth]

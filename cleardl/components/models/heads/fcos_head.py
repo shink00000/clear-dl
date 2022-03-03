@@ -38,7 +38,7 @@ class FCOSHead(nn.Module):
         self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=3, padding=1)
         self.cnt_top = nn.Conv2d(in_channels, 1, kernel_size=3, padding=1)
 
-        self.scales = nn.ModuleDict({f'feat_{level}': Scale(1.0) for level in feat_levels})
+        self.scales = nn.ModuleDict({f'f{level}': Scale(1.0) for level in feat_levels})
 
         self._init_weights()
 
@@ -47,7 +47,7 @@ class FCOSHead(nn.Module):
         for level in self.feat_levels:
             reg_feat = self.reg_branch(feats[level])
             cls_feat = self.cls_branch(feats[level])
-            reg_out = self.scales[f'feat_{level}'](self.reg_top(reg_feat)).exp()
+            reg_out = self.scales[f'f{level}'](self.reg_top(reg_feat)).exp()
             cls_out = self.cls_top(cls_feat)
             cnt_out = self.cnt_top(cls_feat)
             reg_outs.append(reg_out.permute(0, 2, 3, 1).flatten(1, 2))
