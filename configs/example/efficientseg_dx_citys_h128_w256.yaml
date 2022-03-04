@@ -31,20 +31,26 @@ data_pipeline:
         - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, size: *size }
   dataloader:
-    batch_size: 2
+    batch_size: 16
     num_workers: 2
 
 model:
   type: EfficientSeg
   size: d0
+  feat_levels: *feat_levels
   backbone:
     type: EfficientNet
     weights: default
     frozen_stages: 1
-    extra_mode: pool
-  n_classes: *n_classes
-  feat_levels: *feat_levels
-  output_size: *size
+  extra:
+    type: ExtraPool
+    feat_levels: *feat_levels
+  neck:
+    feat_levels: *feat_levels
+  head:
+    feat_levels: *feat_levels
+    n_classes: *n_classes
+    input_size: *size
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
 

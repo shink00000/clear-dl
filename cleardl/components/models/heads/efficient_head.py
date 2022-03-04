@@ -78,14 +78,14 @@ class UpConvBlock(nn.Sequential):
 
 
 class EfficientSegHead(nn.Module):
-    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, output_size: list):
+    def __init__(self, feat_levels: list, in_channels: int, n_classes: int, input_size: list):
         super().__init__()
         self.feat_levels = feat_levels
 
         for level in feat_levels:
             setattr(self, f'uc{level}', UpConvBlock(in_channels, in_channels))
         self.cls_top = nn.Conv2d(in_channels, n_classes, kernel_size=3, padding=1)
-        self.up = nn.UpsamplingBilinear2d(output_size)
+        self.up = nn.UpsamplingBilinear2d(input_size)
 
         self._init_weights()
 
