@@ -5,11 +5,12 @@ import torch.nn.functional as F
 from ..backbones import build_backbone, get_channels
 from ..heads.psp_head import PSPHead, PSPAuxHead
 from ..losses import build_loss
+from ..utils.replace_layer import replace_bn_to_wsgn_
 
 
 class PSPNet(nn.Module):
     def __init__(self, feat_levels: list, backbone: dict, head: dict, aux_head: dict,
-                 criterion: dict):
+                 criterion: dict, replace_bn_to_wsgn: bool = True):
         super().__init__()
 
         assert len(feat_levels) == 2
@@ -22,6 +23,9 @@ class PSPNet(nn.Module):
         aux_head.update({'in_channels': aux_in_channels})
         self.head = PSPHead(**head)
         self.aux_head = PSPAuxHead(**aux_head)
+
+        if replace_bn_to_wsgn:
+            replace_bn_to_wsgn_(self)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])

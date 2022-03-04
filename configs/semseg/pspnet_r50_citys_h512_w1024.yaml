@@ -40,7 +40,7 @@ model:
     type: ResNet
     depth: 50
     weights: default
-    frozen_stages: 1
+    frozen_stages: -1
     replace_stride_with_dilation: [false, true, true]
   head:
     mid_channels: 512
@@ -54,6 +54,7 @@ model:
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+  replace_bn_to_wsgn: true
 
 optimizer:
   type: SGD

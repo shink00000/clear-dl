@@ -54,6 +54,7 @@ model:
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+  replace_bn_to_wsgn: true
 
 optimizer:
   type: SGD

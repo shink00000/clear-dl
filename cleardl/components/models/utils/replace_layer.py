@@ -1,5 +1,7 @@
 import torch.nn as nn
 
+from ..layers.conv_ws import Conv2dWS
+
 GROUP_NORM_LOOKUP = {
     16: 2,  # -> channels per group: 8
     32: 4,  # -> channels per group: 8
@@ -12,17 +14,28 @@ GROUP_NORM_LOOKUP = {
 }
 
 
-def replace_bn_to_gn(model):
-    for name, module in model.named_modules():
-        if isinstance(module, nn.BatchNorm2d):
-            tm = model
-            for attr in name.split('.'):
-                target_module = tm
-                if attr.isdigit():
-                    tm = tm[int(attr)]
-                else:
-                    tm = getattr(tm, attr)
-            gn = nn.GroupNorm(GROUP_NORM_LOOKUP[tm.num_features], tm.num_features)
-            nn.init.constant_(gn.weight, 1.0)
-            nn.init.constant_(gn.bias, 0.0)
-            setattr(target_module, attr, gn)
+def replace_bn_to_wsgn_(model):
+    def _module_attr(name):
+        m_ = model
+        for attr in name.split('.'):
+            module = m_
+            if attr.isdigit():
+                m_ = m_[int(attr)]
+            else:
+                m_ = getattr(m_, attr)
+        return module, attr
+
+    for name, m in model.named_modules():
+        if isinstance(m, nn.Conv2d) and m.bias is None:
+            module, attr = _module_attr(name)
+            conv_ws = Conv2dWS(m.in_channels, m.out_channels, m.kernel_size, m.stride,
+                               m.padding, m.dilation, m.groups, bias=False)
+            conv_ws.weight = m.weight
+            setattr(module, attr, conv_ws)
+
+        elif isinstance(m, nn.BatchNorm2d):
+            module, attr = _module_attr(name)
+            gn = nn.GroupNorm(GROUP_NORM_LOOKUP[m.num_features], m.num_features)
+            gn.weight = m.weight
+            gn.bias = m.bias
+            setattr(module, attr, gn)
