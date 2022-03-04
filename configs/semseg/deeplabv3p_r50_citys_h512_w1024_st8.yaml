@@ -1,5 +1,5 @@
 __variables:
-  - &size [128, 256]
+  - &size [512, 1024]
   - &mean [0.485, 0.456, 0.406]
   - &std [0.229, 0.224, 0.225]
   - &data_dir ./data/cityscapes_ss/
@@ -7,8 +7,8 @@ __variables:
 
 __particular_variables:
   - &feat_levels [2, 4, 5]
-  - &dilation [false, false, true]
-  - &bins [1, 6, 12, 18]
+  - &dilation [false, true, true]
+  - &bins [1, 12, 24, 36]
 
 framework:
   type: SemSeg
@@ -37,7 +37,7 @@ data_pipeline:
     num_workers: 2
 
 model:
-  type: DeepLabV3Plus
+  type: DeepLabV3P
   feat_levels: *feat_levels
   backbone:
     type: ResNet
@@ -45,9 +45,16 @@ model:
     weights: default
     frozen_stages: 1
     replace_stride_with_dilation: *dilation
-  bins: *bins
-  n_classes: *n_classes
-  output_size: *size
+  head:
+    mid_channels: 512
+    low_out_channels: 48
+    bins: *bins
+    n_classes: *n_classes
+    input_size: *size
+  aux_head:
+    mid_channels: 256
+    n_classes: *n_classes
+    input_size: *size
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
