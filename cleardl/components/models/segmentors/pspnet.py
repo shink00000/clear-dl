@@ -2,37 +2,33 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..backbones import build_backbone
-from ..necks.pyramid_pooling import PyramidPooling
-from ..heads.psp_head import PSPHead
-from ..heads.auxiliary_head import AuxiliaryHead
+from ..backbones import build_backbone, get_channels
+from ..heads.psp_head import PSPHead, PSPAuxHead
 from ..losses import build_loss
-from ..utils.replace_layer import replace_bn_to_gn
 
 
 class PSPNet(nn.Module):
-    def __init__(self, backbone: dict, bins: list, n_classes: int, output_size: list, criterion: dict):
+    def __init__(self, feat_levels: list, backbone: dict, head: dict, aux_head: dict,
+                 criterion: dict):
         super().__init__()
 
-        backbone.update({'feat_levels': [4, 5], 'align_channel': False})
+        assert len(feat_levels) == 2
+        self.feat_levels = feat_levels
+
+        # layers
         self.backbone = build_backbone(backbone)
-
-        channels = self.backbone.get_channels()
-        aux_in_channels, in_channels = channels[4], channels[5]
-        out_channels = 512
-        self.neck = PyramidPooling(in_channels, out_channels, bins)
-        self.head = PSPHead(out_channels, n_classes, output_size)
-        self.aux_head = AuxiliaryHead(aux_in_channels, n_classes, output_size)
-
-        replace_bn_to_gn(self)
+        aux_in_channels, in_channels = get_channels(self.backbone, feat_levels)
+        head.update({'in_channels': in_channels})
+        aux_head.update({'in_channels': aux_in_channels})
+        self.head = PSPHead(**head)
+        self.aux_head = PSPAuxHead(**aux_head)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
 
     def forward(self, x):
         feats = self.backbone(x)
-        aux, x = feats[4], feats[5]
-        x = self.neck(x)
+        aux, x = (feats[level] for level in self.feat_levels)
         out = self.head(x)
         aux_out = self.aux_head(aux)
 

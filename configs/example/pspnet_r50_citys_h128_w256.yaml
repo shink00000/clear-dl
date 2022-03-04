@@ -23,7 +23,6 @@ data_pipeline:
         - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
-        - { type: PixelwiseCutOff, p: [0.0, 0.1] }
       val:
         - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, size: *size }
@@ -36,22 +35,22 @@ data_pipeline:
 
 model:
   type: PSPNet
+  feat_levels: [4, 5]
   backbone:
     type: ResNet
     depth: 50
     weights: default
     frozen_stages: 1
     replace_stride_with_dilation: [false, true, true]
-  neck:
-    bins: *bins
-    out_channels: 512
   head:
+    mid_channels: 512
+    bins: *bins
     n_classes: *n_classes
-    output_size: *size
+    input_size: *size
   aux_head:
     mid_channels: 256
     n_classes: *n_classes
-    output_size: *size    
+    input_size: *size    
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }

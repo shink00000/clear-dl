@@ -35,14 +35,22 @@ data_pipeline:
 
 model:
   type: PSPNet
+  feat_levels: [4, 5]
   backbone:
     type: ResNet
     depth: 50
     weights: default
+    frozen_stages: 1
     replace_stride_with_dilation: [false, true, true]
-  bins: *bins
-  n_classes: *n_classes
-  output_size: *size
+  head:
+    mid_channels: 512
+    bins: *bins
+    n_classes: *n_classes
+    input_size: *size
+  aux_head:
+    mid_channels: 256
+    n_classes: *n_classes
+    input_size: *size    
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
