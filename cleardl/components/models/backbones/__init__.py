@@ -19,14 +19,14 @@ def build_backbone(backbone: dict):
 
 
 @torch.no_grad()
-def get_channels(backbone: nn.Module, levels: list):
+def get_channels(backbone: nn.Module, levels: list) -> list:
     x = torch.rand(2, 3, 128, 128)
     out = backbone(x)
     return [out[level].size(1) if level in out else -1 for level in levels]
 
 
 @torch.no_grad()
-def get_max_level(backbone: nn.Module):
+def get_max_level(backbone: nn.Module) -> int:
     x = torch.rand(2, 3, 128, 128)
     out = backbone(x)
     return max(out)
