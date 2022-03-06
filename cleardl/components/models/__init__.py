@@ -6,6 +6,7 @@ from .segmentors.pspnet import PSPNet
 from .segmentors.deeplab_v3p import DeepLabV3P
 from .segmentors.efficientseg import EfficientSeg
 from .segmentors.bisenet_v1 import BiSeNetV1
+from .segmentors.bisenet_v2 import BiSeNetV2
 
 MODELS = {
     'FCOS': FCOS,
@@ -16,4 +17,5 @@ MODELS = {
     'DeepLabV3P': DeepLabV3P,
     'EfficientSeg': EfficientSeg,
     'BiSeNetV1': BiSeNetV1,
+    'BiSeNetV2': BiSeNetV2,
 }

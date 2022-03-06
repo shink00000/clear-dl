@@ -7,7 +7,7 @@ from torchinfo import summary
 class BaseFramework(nn.Module, metaclass=ABCMeta):
     INPUT_SIZE = None
 
-    def __init__(self, model: object, optimizer: object, scheduler: object, metrics: object):
+    def __init__(self, model: nn.Module, optimizer: object, scheduler: object, metrics: object):
         super().__init__()
         if torch.cuda.is_available():
             self.device = torch.device('cuda:0')
@@ -64,12 +64,13 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
     def test_step(self, data: tuple):
         pass
 
-    def load_checkpoints(self, checkpoints: str):
+    def load_checkpoints(self, checkpoints: str, weights_only: False):
         state_dict = torch.load(checkpoints, map_location=self.device)
-        self.model.load_state_dict(state_dict['weights'])
-        self.optimizer.load_state_dict(state_dict['optimizer'])
-        self.scheduler.load_state_dict(state_dict['scheduler'])
-        self.last_epoch = state_dict['epoch']
+        self.model.load_state_dict(state_dict['weights'], strict=False)
+        if not weights_only:
+            self.optimizer.load_state_dict(state_dict['optimizer'])
+            self.scheduler.load_state_dict(state_dict['scheduler'])
+            self.last_epoch = state_dict['epoch']
 
     def view_metrics(self):
         for name, v in self.results['val'].items():

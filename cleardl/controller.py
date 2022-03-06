@@ -46,7 +46,7 @@ class EpochLogger:
 
 class Controller:
     def __init__(self, module, datamodule, out_dir: str, epochs: int, eval_interval: int = 10,
-                 resume_from: str = None):
+                 resume_from: str = None, load_from: str = None):
         self.module = module
         self.datamodule = datamodule
         self.logger = EpochLogger(out_dir)
@@ -54,6 +54,8 @@ class Controller:
         self.eval_interval = eval_interval
         if resume_from is not None:
             self.module.load_checkpoints(resume_from)
+        elif load_from is not None:
+            self.module.load_checkpoints(resume_from, weights_only=True)
         self.start_epoch = self.module.last_epoch + 1
 
     def __call__(self, mode: str):

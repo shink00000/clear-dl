@@ -8,16 +8,19 @@ from ..losses import build_loss
 
 class ConvBlock(nn.Sequential):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int, stride: int = 1, padding: int = 0,
-                 act: str = 'relu'):
-        act_layer = {
-            'relu': nn.ReLU(inplace=True),
-            'sigmoid': nn.Sigmoid()
-        }[act]
-        super().__init__(
-            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
-            nn.BatchNorm2d(out_channels),
-            act_layer
-        )
+                 groups: int = 1, act: str = 'relu'):
+        modules = [
+            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding,
+                      groups=groups, bias=False),
+            nn.BatchNorm2d(out_channels)
+        ]
+        if act is not None:
+            act_layer = {
+                'relu': nn.ReLU(inplace=True),
+                'sigmoid': nn.Sigmoid()
+            }[act]
+            modules.append(act_layer)
+        super().__init__(*modules)
 
 
 class SpacialPath(nn.Sequential):
