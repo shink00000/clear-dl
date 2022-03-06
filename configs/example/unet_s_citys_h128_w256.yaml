@@ -54,7 +54,6 @@ optimizer:
 
 scheduler:
   type: PolynomialScheduler
-  min_factor: 0.01
   gamma: 0.9
   n_iterations: 40000
 
