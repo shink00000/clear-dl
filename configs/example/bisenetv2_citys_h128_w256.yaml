@@ -20,7 +20,7 @@ data_pipeline:
       train:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 3.0] }
+        - { type: Resize, scale_range: [1.0, 4.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
         - { type: PixelwiseCutOff, p: [0.0, 0.1] }
@@ -50,7 +50,7 @@ model:
     input_size: *size
   aux_head:
     in_channels: *aux_channels
-    mid_channels: [32, 64, 128, 1024]
+    mid_channels: [32, 64, 128, 256]
     n_classes: *n_classes
     input_size: *size
   criterion:
