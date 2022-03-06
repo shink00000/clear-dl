@@ -135,7 +135,7 @@ class Resize(nn.Module):
         dc['image'] = T.functional.resize(
             dc['image'],
             size=size,
-            interpolation=T.InterpolationMode.BICUBIC
+            interpolation=T.InterpolationMode.BILINEAR
         )
         if 'bboxes' in dc:
             new_h, new_w = size
