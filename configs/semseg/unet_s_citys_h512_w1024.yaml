@@ -53,9 +53,10 @@ optimizer:
   weight_decay: 0.0005
 
 scheduler:
-  type: PolynomialScheduler
-  gamma: 0.9
-  n_iterations: 40000
+  type: WarmupExponentialLR
+  gamma: 0.96
+  warmup_interval: 3
+  warmup_start_factor: 0.3
 
 metrics:
   - type: MeanIoU

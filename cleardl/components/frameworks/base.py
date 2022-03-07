@@ -64,7 +64,7 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
     def test_step(self, data: tuple):
         pass
 
-    def load_checkpoints(self, checkpoints: str, weights_only: False):
+    def load_checkpoints(self, checkpoints: str, weights_only: bool = False):
         state_dict = torch.load(checkpoints, map_location=self.device)
         self.model.load_state_dict(state_dict['weights'], strict=False)
         if not weights_only:
