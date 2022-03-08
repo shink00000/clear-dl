@@ -4,7 +4,7 @@ from .warmup_scheduler import (
     WarmupMultiStepLR,
     WarmupExponentialLR
 )
-from .polynomial_scheduler import PolynomialScheduler
+from .polynomial_scheduler import PolynomialLR
 
 
 SCHEDULERS = {
@@ -12,5 +12,5 @@ SCHEDULERS = {
     'ExponentialLR': ExponentialLR,
     'WarmupMultiStepLR': WarmupMultiStepLR,
     'WarmupExponentialLR': WarmupExponentialLR,
-    'PolynomialScheduler': PolynomialScheduler
+    'PolynomialLR': PolynomialLR
 }

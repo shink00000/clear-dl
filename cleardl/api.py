@@ -36,7 +36,8 @@ def main(args):
         args.output_dir,
         args.max_epochs,
         args.eval_interval,
-        args.resume_from
+        args.resume_from,
+        args.load_from
     )
     controller(args.mode)
 
@@ -49,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_epochs', type=int, default=10)
     parser.add_argument('--eval_interval', type=int, default=10)
     parser.add_argument('--resume_from', type=str, default=None)
+    parser.add_argument('--load_from', type=str, default=None)
     args = parser.parse_args()
 
     main(args)

@@ -170,6 +170,7 @@ class SegmentationHead(nn.Sequential):
     def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
         super().__init__(
             ConvBlock(in_channels, mid_channels, kernel_size=3, padding=1),
+            nn.Dropout2d(0.1),
             nn.Conv2d(mid_channels, n_classes, kernel_size=1),
             nn.UpsamplingBilinear2d(input_size)
         )
@@ -180,7 +181,12 @@ class AuxHead(nn.Module):
         assert len(in_channels) == len(mid_channels)
         super().__init__()
         self.heads = nn.ModuleList([
-            SegmentationHead(in_channels[i], mid_channels[i], n_classes, input_size)
+            nn.Sequential(
+                ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
+                ConvBlock(mid_channels[i], mid_channels[i], kernel_size=3, padding=1),
+                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1),
+                nn.UpsamplingBilinear2d(input_size)
+            )
             for i in range(len(in_channels))
         ])
 

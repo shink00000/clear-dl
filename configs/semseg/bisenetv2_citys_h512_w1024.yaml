@@ -45,12 +45,12 @@ model:
     out_channels: *channels
   head:
     in_channels: *channels
-    mid_channels: 512
+    mid_channels: 1024
     n_classes: *n_classes
     input_size: *size
   aux_head:
     in_channels: *aux_channels
-    mid_channels: [32, 64, 128, 256]
+    mid_channels: [16, 64, 128, 512]
     n_classes: *n_classes
     input_size: *size
   criterion:
@@ -60,8 +60,6 @@ model:
 optimizer:
   type: SGD
   param_args:
-    lr:
-      bias: 2.
     weight_decay:
       bias: 0.
   lr: 0.05
@@ -69,10 +67,9 @@ optimizer:
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupExponentialLR
-  gamma: 0.96
-  warmup_interval: 3
-  warmup_start_factor: 0.3
+  type: PolynomialLR
+  gamma: 0.9
+  max_iterations: 120
 
 metrics:
   - type: MeanIoU
