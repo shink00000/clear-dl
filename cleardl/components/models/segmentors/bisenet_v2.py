@@ -180,20 +180,18 @@ class AuxHead(nn.Module):
     def __init__(self, in_channels: list, mid_channels: list, n_classes: int, input_size: list):
         assert len(in_channels) == len(mid_channels)
         super().__init__()
-        self.heads = nn.ModuleList([
-            nn.Sequential(
+        for i in range(len(in_channels)):
+            setattr(self, f'aux_{i}', nn.Sequential(
                 ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
                 ConvBlock(mid_channels[i], mid_channels[i], kernel_size=3, padding=1),
                 nn.Conv2d(mid_channels[i], n_classes, kernel_size=1),
                 nn.UpsamplingBilinear2d(input_size)
-            )
-            for i in range(len(in_channels))
-        ])
+            ))
 
     def forward(self, auxs: list):
         aux_outs = []
         for i in range(len(auxs)):
-            aux_out = self.heads[i](auxs[i])
+            aux_out = getattr(self, f'aux_{i}')(auxs[i])
             aux_outs.append(aux_out)
         return aux_out
 

@@ -50,7 +50,7 @@ model:
     input_size: *size
   aux_head:
     in_channels: *aux_channels
-    mid_channels: [16, 64, 128, 512]
+    mid_channels: [16, 64, 256, 1024]
     n_classes: *n_classes
     input_size: *size
   criterion:
