@@ -6,7 +6,7 @@ __variables:
   - &n_classes 19
 
 __particular_variables:
-  - &feat_levels [3, 4, 5]
+  - &feat_levels [4, 5]
 
 framework:
   type: SemSeg
@@ -20,7 +20,7 @@ data_pipeline:
       train:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 4.0] }
+        - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
       val:
@@ -36,15 +36,14 @@ data_pipeline:
 model:
   type: BiSeNetV1
   spacial_path:
-    out_channels: [64, 64, 128]
+    out_channels: [64, 64, 64, 128]
   context_path:
     backbone:
       type: ResNet
       depth: 18
       weights: default
-      frozen_stages: 1
     feat_levels: *feat_levels
-    out_channels: 128
+    out_channels: &context_out_channels 128
   ffm:
     in_channels: 256
     out_channels: &ffm_out_channels 256
@@ -54,7 +53,8 @@ model:
     n_classes: *n_classes
     input_size: *size
   aux_head:
-    mid_channels: 256
+    in_channels: [*context_out_channels, *context_out_channels]
+    mid_channels: [64, 64]
     n_classes: *n_classes
     input_size: *size
   criterion:
@@ -64,20 +64,17 @@ model:
 optimizer:
   type: SGD
   param_args:
-    lr:
-      backbone: 0.1
-      bias: 2.
     weight_decay:
       bias: 0.
-  lr: 0.01
+  lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
   type: WarmupExponentialLR
-  gamma: 0.96
-  warmup_interval: 3
-  warmup_start_factor: 0.3
+  gamma: 0.95
+  warmup_interval: 5
+  warmup_start_factor: 0.1
 
 metrics:
   - type: MeanIoU

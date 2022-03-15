@@ -92,7 +92,7 @@ class DeepLabV3PHead(nn.Module):
     def _init_weights(self):
         for name, m in self.named_modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+                nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     if 'cls_top' in name:
                         nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))
@@ -128,7 +128,7 @@ class DeepLabV3PAuxHead(nn.Module):
     def _init_weights(self):
         for name, m in self.named_modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+                nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     if 'cls_top' in name:
                         nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))

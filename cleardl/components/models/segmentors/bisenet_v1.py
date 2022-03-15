@@ -25,14 +25,20 @@ class ConvBlock(nn.Sequential):
 
 class SpacialPath(nn.Sequential):
     def __init__(self, out_channels: list):
-        assert len(out_channels) == 3
-        c0 = 3
-        c1, c2, c3 = out_channels
-        super().__init__(
-            ConvBlock(c0, c1, kernel_size=7, stride=2, padding=3),
-            ConvBlock(c1, c2, kernel_size=3, stride=2, padding=1),
-            ConvBlock(c2, c3, kernel_size=3, stride=2, padding=1)
-        )
+        c_in = 3
+        modules = []
+        for i in range(len(out_channels)):
+            c_out = out_channels[i]
+            if i == 0:
+                conv = ConvBlock(c_in, c_out, kernel_size=7, stride=2, padding=3)
+            elif i < len(out_channels) - 1:
+                conv = ConvBlock(c_in, c_out, kernel_size=3, stride=2, padding=1)
+            else:
+                conv = ConvBlock(c_in, c_out, kernel_size=1)
+            modules.append(conv)
+            c_in = c_out
+
+        super().__init__(*modules)
 
 
 class ARM(nn.Module):
@@ -62,26 +68,36 @@ class ContextPath(nn.Module):
 
         # layers
         self.backbone = build_backbone(backbone)
-        in_channels_3, in_channels_4, in_channels_5 = get_channels(self.backbone, feat_levels)
-        self.arm1 = ARM(in_channels_4, out_channels)
-        self.arm2 = ARM(in_channels_5, out_channels)
+        in_channels_4, in_channels_5 = get_channels(self.backbone, feat_levels)
+        self.arm4 = ARM(in_channels_4, out_channels)
+        self.arm5 = ARM(in_channels_5, out_channels)
         self.tail = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(in_channels_5, out_channels, kernel_size=1)
+            ConvBlock(in_channels_5, out_channels, kernel_size=1)
         )
-        self.up = nn.UpsamplingBilinear2d(scale_factor=2)
-
-        # for aux
-        self.aux_in_channels_1 = in_channels_3
-        self.aux_in_channels_2 = in_channels_4
+        self.up4 = nn.Sequential(
+            nn.UpsamplingNearest2d(scale_factor=2),
+            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1)
+        )
+        self.up5 = nn.Sequential(
+            nn.UpsamplingNearest2d(scale_factor=2),
+            ConvBlock(out_channels, out_channels, kernel_size=3, padding=1)
+        )
 
     def forward(self, x):
         feats = self.backbone(x)
-        x3, x4, x5 = (feats[level] for level in self.feat_levels)
-        t = self.tail(x5)
-        a = self.up(self.arm2(x5) + t)
-        out = self.up(self.arm1(x4) + a)
-        return out, x3, x4
+        x4, x5 = (feats[level] for level in self.feat_levels)
+
+        # up stream 1
+        x = self.tail(x5)
+        x = self.arm5(x5) + x
+        out5 = self.up5(x)
+
+        # up stream 2
+        x = self.arm4(x4) + out5
+        out4 = self.up4(x)
+
+        return out4, out5
 
 
 class FFM(nn.Module):
@@ -89,21 +105,14 @@ class FFM(nn.Module):
 
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
-        )
+        self.conv = ConvBlock(in_channels, out_channels, kernel_size=1)
         self.attn = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(out_channels, out_channels, kernel_size=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=1),
+            ConvBlock(out_channels, out_channels, kernel_size=1),
             nn.Sigmoid()
         )
 
     def forward(self, x_sp, x_cp):
-        x_cp = F.interpolate(x_cp, size=x_sp.shape[2:], mode='bilinear', align_corners=True)
         x = torch.cat([x_sp, x_cp], dim=1)
         x = self.conv(x)
         a = self.attn(x)
@@ -111,25 +120,34 @@ class FFM(nn.Module):
         return out
 
 
-class BiSeHead(nn.Module):
+class SegmentationHead(nn.Sequential):
     def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
-        super().__init__()
-
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(mid_channels),
-            nn.ReLU(inplace=True)
+        super().__init__(
+            ConvBlock(in_channels, mid_channels, kernel_size=3, padding=1),
+            nn.Dropout2d(0.1),
+            nn.Conv2d(mid_channels, n_classes, kernel_size=1),
+            nn.UpsamplingBilinear2d(input_size)
         )
-        self.drop = nn.Dropout2d(0.1)
-        self.cls_top = nn.Conv2d(mid_channels, n_classes, kernel_size=1)
-        self.up = nn.UpsamplingBilinear2d(input_size)
 
-    def forward(self, x: torch.Tensor):
-        x = self.conv(x)
-        x = self.drop(x)
-        x = self.cls_top(x)
-        out = self.up(x)
-        return out
+
+class AuxHead(nn.Module):
+    def __init__(self, in_channels: list, mid_channels: list, n_classes: int, input_size: list):
+        assert len(in_channels) == len(mid_channels)
+        super().__init__()
+        for i in range(len(in_channels)):
+            setattr(self, f'aux_{i}', nn.Sequential(
+                ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
+                nn.Dropout2d(0.1),
+                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1),
+                nn.UpsamplingBilinear2d(input_size)
+            ))
+
+    def forward(self, auxs: list):
+        aux_outs = []
+        for i in range(len(auxs)):
+            aux_out = getattr(self, f'aux_{i}')(auxs[i])
+            aux_outs.append(aux_out)
+        return aux_out
 
 
 class BiSeNetV1(nn.Module):
@@ -140,9 +158,8 @@ class BiSeNetV1(nn.Module):
         self.spacial_path = SpacialPath(**spacial_path)
         self.context_path = ContextPath(**context_path)
         self.ffm = FFM(**ffm)
-        self.head = BiSeHead(**head)
-        self.aux_head_1 = BiSeHead(in_channels=self.context_path.aux_in_channels_1, **aux_head)
-        self.aux_head_2 = BiSeHead(in_channels=self.context_path.aux_in_channels_2, **aux_head)
+        self.head = SegmentationHead(**head)
+        self.aux_head = AuxHead(**aux_head)
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
@@ -151,12 +168,11 @@ class BiSeNetV1(nn.Module):
 
     def forward(self, x):
         x_sp = self.spacial_path(x)
-        x_cp, aux_1, aux_2 = self.context_path(x)
-        x = self.ffm(x_sp, x_cp)
+        x_cp4, x_cp5 = self.context_path(x)
+        x = self.ffm(x_sp, x_cp4)
         out = self.head(x)
-        aux_out_1 = self.aux_head_1(aux_1)
-        aux_out_2 = self.aux_head_2(aux_2)
-        return out, aux_out_1, aux_out_2
+        aux_out = self.aux_head([x_cp4, x_cp5])
+        return out, aux_out
 
     def loss(self, outputs: tuple, targets: torch.Tensor) -> torch.Tensor:
         cls_outs, *aux_outs = outputs
@@ -164,7 +180,7 @@ class BiSeNetV1(nn.Module):
         aux_loss = 0
         for aux_out in aux_outs:
             aux_loss = self.aux_loss(aux_out, targets)
-        return cls_loss + 0.4 * aux_loss
+        return cls_loss + aux_loss
 
     def predict(self, outputs: tuple) -> torch.Tensor:
         cls_outs, *_ = outputs
@@ -174,7 +190,7 @@ class BiSeNetV1(nn.Module):
     def _init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.xavier_uniform_(m.weight, gain=1.0)
+                nn.init.xavier_normal_(m.weight)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
             elif isinstance(m, nn.BatchNorm2d):
