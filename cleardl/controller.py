@@ -55,7 +55,7 @@ class Controller:
         if resume_from is not None:
             self.module.load_checkpoints(resume_from)
         elif load_from is not None:
-            self.module.load_checkpoints(resume_from, weights_only=True)
+            self.module.load_checkpoints(load_from, weights_only=True)
         self.start_epoch = self.module.last_epoch + 1
 
     def __call__(self, mode: str):
