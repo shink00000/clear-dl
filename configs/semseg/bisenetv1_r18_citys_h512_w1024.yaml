@@ -25,10 +25,8 @@ data_pipeline:
         - { type: RandomHorizontalFlip }
       val:
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, size: *size }
       test:
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, size: *size }
   dataloader:
     batch_size: 16
     num_workers: 2
@@ -66,15 +64,14 @@ optimizer:
   param_args:
     weight_decay:
       bias: 0.
-  lr: 0.025
+  lr: 0.0125
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupExponentialLR
-  gamma: 0.95
-  warmup_interval: 5
-  warmup_start_factor: 0.1
+  type: PolynomialLR
+  gamma: 0.9
+  max_iterations: 22200
 
 metrics:
   - type: MeanIoU
