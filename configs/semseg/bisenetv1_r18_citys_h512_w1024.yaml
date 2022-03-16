@@ -49,12 +49,10 @@ model:
     in_channels: *ffm_out_channels
     mid_channels: 256
     n_classes: *n_classes
-    input_size: *size
   aux_head:
     in_channels: [*context_out_channels, *context_out_channels]
     mid_channels: [64, 64]
     n_classes: *n_classes
-    input_size: *size
   criterion:
     cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
@@ -64,14 +62,14 @@ optimizer:
   param_args:
     weight_decay:
       bias: 0.
-  lr: 0.0125
+  lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 22200
+  max_iterations: 45000
 
 metrics:
   - type: MeanIoU

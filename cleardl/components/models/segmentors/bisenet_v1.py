@@ -121,25 +121,23 @@ class FFM(nn.Module):
 
 
 class SegmentationHead(nn.Sequential):
-    def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
+    def __init__(self, in_channels: int, mid_channels: int, n_classes: int):
         super().__init__(
             ConvBlock(in_channels, mid_channels, kernel_size=3, padding=1),
             nn.Dropout2d(0.1),
-            nn.Conv2d(mid_channels, n_classes, kernel_size=1),
-            nn.UpsamplingBilinear2d(input_size)
+            nn.Conv2d(mid_channels, n_classes, kernel_size=1)
         )
 
 
 class AuxHead(nn.Module):
-    def __init__(self, in_channels: list, mid_channels: list, n_classes: int, input_size: list):
+    def __init__(self, in_channels: list, mid_channels: list, n_classes: int,):
         assert len(in_channels) == len(mid_channels)
         super().__init__()
         for i in range(len(in_channels)):
             setattr(self, f'aux_{i}', nn.Sequential(
                 ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
                 nn.Dropout2d(0.1),
-                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1),
-                nn.UpsamplingBilinear2d(input_size)
+                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1)
             ))
 
     def forward(self, auxs: list):
@@ -147,7 +145,7 @@ class AuxHead(nn.Module):
         for i in range(len(auxs)):
             aux_out = getattr(self, f'aux_{i}')(auxs[i])
             aux_outs.append(aux_out)
-        return aux_out
+        return aux_outs
 
 
 class BiSeNetV1(nn.Module):
@@ -167,12 +165,20 @@ class BiSeNetV1(nn.Module):
         self._init_weights()
 
     def forward(self, x):
+        H, W = x.size()[2:]
+
         x_sp = self.spacial_path(x)
         x_cp4, x_cp5 = self.context_path(x)
         x = self.ffm(x_sp, x_cp4)
         out = self.head(x)
-        aux_out = self.aux_head([x_cp4, x_cp5])
-        return out, aux_out
+        aux1, aux2 = self.aux_head([x_cp4, x_cp5])
+
+        # restore
+        out = F.interpolate(out, size=(H, W), mode='bilinear', align_corners=True)
+        aux1 = F.interpolate(aux1, size=(H, W), mode='bilinear', align_corners=True)
+        aux2 = F.interpolate(aux2, size=(H, W), mode='bilinear', align_corners=True)
+
+        return out, aux1, aux2
 
     def loss(self, outputs: tuple, targets: torch.Tensor) -> torch.Tensor:
         cls_outs, *aux_outs = outputs
