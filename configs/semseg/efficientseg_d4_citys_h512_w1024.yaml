@@ -81,5 +81,5 @@ scheduler:
 metrics:
   - type: MeanIoU
     n_classes: *n_classes
-    labelmap_path: ./data/cityscapes_ss/info.json
+    labelmap_path: ./data/cityscapes_ss/labelmap.json
     ignore_index: 255

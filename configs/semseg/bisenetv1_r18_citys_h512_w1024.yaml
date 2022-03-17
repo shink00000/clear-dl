@@ -58,21 +58,21 @@ model:
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
-  type: SGD
+  type: AdamW
   param_args:
+    lr:
+      backbone: 0.1
     weight_decay:
       bias: 0.
-  lr: 0.025
-  momentum: 0.9
+  lr: 0.0025
   weight_decay: 0.0005
 
 scheduler:
-  type: PolynomialLR
-  gamma: 0.9
-  max_iterations: 45000
+  type: ConstantLR
+  factor: 1.0
 
 metrics:
   - type: MeanIoU
     n_classes: *n_classes
-    labelmap_path: ./data/cityscapes_ss/info.json
+    labelmap_path: ./data/cityscapes_ss/labelmap.json
     ignore_index: 255

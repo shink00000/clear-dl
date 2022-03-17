@@ -12,9 +12,6 @@ class SemSegDataset(Dataset):
     """
     Dataset Folder Layout
         - data_dir
-            - pathlists
-                - train_list.txt
-                - val_list.txt
             - images
                 - train
                     - image_1.jpg
@@ -23,6 +20,9 @@ class SemSegDataset(Dataset):
                 - val
                     ...
             - labels
+            - labelmap.json
+            - train.txt
+            - val.txt
     """
     collate_fn = None
 
@@ -53,7 +53,7 @@ class SemSegDataset(Dataset):
     def _create_data_list(self, phase: str, data_dir: str):
         data_list = []
         phase = 'val' if phase == 'test' else phase  # test does not always exist
-        with open(Path(f'{data_dir}/pathlists/{phase}_list.txt'), 'r') as f:
+        with open(Path(f'{data_dir}/{phase}.txt'), 'r') as f:
             pathlist = f.readlines()
         for line in pathlist:
             image_path, label_path = line.strip().split(' ')
