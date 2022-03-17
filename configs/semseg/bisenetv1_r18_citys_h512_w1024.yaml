@@ -58,14 +58,11 @@ model:
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
-  type: AdamW
+  type: RAdam
   param_args:
     lr:
       backbone: 0.1
-    weight_decay:
-      bias: 0.
   lr: 0.0025
-  weight_decay: 0.0005
 
 scheduler:
   type: ConstantLR

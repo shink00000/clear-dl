@@ -1,6 +1,7 @@
-from torch.optim import SGD, AdamW
+from torch.optim import SGD, AdamW, RAdam
 
 OPTIMIZERS = {
     'SGD': SGD,
-    'AdamW': AdamW
+    'AdamW': AdamW,
+    'RAdam': RAdam
 }
