@@ -2,7 +2,8 @@ from torch.optim.lr_scheduler import MultiStepLR, ExponentialLR, ConstantLR
 
 from .warmup_scheduler import (
     WarmupMultiStepLR,
-    WarmupExponentialLR
+    WarmupExponentialLR,
+    WarmupPolynomialLR,
 )
 from .polynomial_scheduler import PolynomialLR
 
@@ -13,5 +14,6 @@ SCHEDULERS = {
     'ExponentialLR': ExponentialLR,
     'WarmupMultiStepLR': WarmupMultiStepLR,
     'WarmupExponentialLR': WarmupExponentialLR,
-    'PolynomialLR': PolynomialLR
+    'PolynomialLR': PolynomialLR,
+    'WarmupPolynomialLR': WarmupPolynomialLR
 }

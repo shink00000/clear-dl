@@ -58,15 +58,22 @@ model:
     aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
-  type: RAdam
+  type: SGD
   param_args:
     lr:
       backbone: 0.1
-  lr: 0.0025
+    weight_decay:
+      bias: 0.
+  lr: 0.025
+  momentum: 0.9
+  weight_decay: 0.0005
 
 scheduler:
-  type: ConstantLR
-  factor: 1.0
+  type: WarmupPolynomialLR
+  gamma: 2.2
+  max_iterations: 20000
+  warmup_start_factor: 0.3
+  warmup_interval: 1000
 
 metrics:
   - type: MeanIoU
