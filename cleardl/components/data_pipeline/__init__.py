@@ -29,7 +29,7 @@ class DataPipeline:
             pin_memory=True,
             collate_fn=dataset.collate_fn,
             drop_last=True,
-            **self.dataloader
+            **self.dataloader['train']
         )
 
     def val_dataloader(self):
@@ -39,7 +39,7 @@ class DataPipeline:
             shuffle=False,
             pin_memory=True,
             collate_fn=dataset.collate_fn,
-            **self.dataloader
+            **self.dataloader['val']
         )
 
     def test_dataloader(self):
@@ -49,5 +49,5 @@ class DataPipeline:
             shuffle=False,
             pin_memory=True,
             collate_fn=dataset.collate_fn,
-            **self.dataloader
+            **self.dataloader['test']
         )

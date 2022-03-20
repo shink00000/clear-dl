@@ -15,7 +15,6 @@ class SemSeg(BaseFramework):
             self.results['train'][f'LearningRate/lr_{i}'] = lr
 
     def train_step(self, data: tuple):
-        self.optimizer.zero_grad()
         images, targets = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
@@ -23,6 +22,7 @@ class SemSeg(BaseFramework):
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=35, norm_type=2)
         self.optimizer.step()
+        self.optimizer.zero_grad()
         self.train_loss += loss * images.size(0)
         self.train_counts += images.size(0)
         self.scheduler.step()
