@@ -71,7 +71,7 @@ optimizer:
 scheduler:
   type: WarmupPolynomialLR
   gamma: 2.2
-  max_iterations: 20000
+  max_iterations: 40000
   warmup_start_factor: 0.3
   warmup_interval: 1000
 
