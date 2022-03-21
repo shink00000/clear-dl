@@ -76,11 +76,11 @@ optimizer:
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupPolynomialLR
-  gamma: 2.2
-  max_iterations: 40000
+  type: WarmupMultiStepLR
+  milestones: [50, 85]
+  gamma: 0.1
+  warmup_interval: 3
   warmup_start_factor: 0.3
-  warmup_interval: 1000
 
 metrics:
   - type: MeanIoU
