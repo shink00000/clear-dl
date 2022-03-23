@@ -26,9 +26,9 @@ class SemSegDataset(Dataset):
     """
     collate_fn = None
 
-    def __init__(self, phase: str, data_dir: str, transforms: dict):
+    def __init__(self, phase: str, data_dir: str, transforms: list):
         self.data_list = self._create_data_list(phase, data_dir)
-        self.transforms = build_transforms(transforms[phase])
+        self.transforms = build_transforms(transforms)
 
     def __len__(self):
         return len(self.data_list)

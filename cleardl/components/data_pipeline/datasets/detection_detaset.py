@@ -24,9 +24,9 @@ class DetectionDataset(Dataset):
                 ...
     """
 
-    def __init__(self, phase: str, data_dir: str, transforms: dict, encoder: dict):
+    def __init__(self, phase: str, data_dir: str, transforms: list, encoder: dict):
         self.data_list = self._create_data_list(phase, data_dir)
-        self.transforms = build_transforms(transforms[phase])
+        self.transforms = build_transforms(transforms)
         self.encoder = build_encoder(encoder)
 
     def __len__(self):

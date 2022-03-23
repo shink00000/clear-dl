@@ -19,8 +19,8 @@ data_pipeline:
     transforms:
       train:
         - { type: PhotoMetricDistortion }
-        - { type: Normalize, mean: *mean, std: *std }
         - { type: Resize, scale_range: [0.5, 2.0] }
+        - { type: Normalize, mean: *mean, std: *std }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
       val:
@@ -28,15 +28,11 @@ data_pipeline:
       test:
         - { type: Normalize, mean: *mean, std: *std }
   dataloader:
-    train:
-      batch_size: 16
-      num_workers: 2
-    val:
-      batch_size: 4
-      num_workers: 2
-    test:
-      batch_size: 4
-      num_workers: 2
+    batch_size:
+      train: 16
+      val: 4
+      test: 4
+    num_workers: 2
 
 model:
   type: BiSeNetV1
@@ -61,26 +57,22 @@ model:
     mid_channels: [64, 64]
     n_classes: *n_classes
   criterion:
-    cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
-    aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
   param_args:
     lr:
       backbone: 0.1
-    weight_decay:
-      bias: 0.
   lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupMultiStepLR
-  milestones: [50, 85]
-  gamma: 0.1
-  warmup_interval: 3
-  warmup_start_factor: 0.3
+  type: PolynomialLR
+  gamma: 0.9
+  max_iterations: 40000
 
 metrics:
   - type: MeanIoU

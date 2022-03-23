@@ -26,7 +26,7 @@ def build_model(cfg: dict):
 def build_optimizer(cfg: dict, named_parameters: Generator[tuple, None, None]):
     param_args = cfg.pop('param_args', {})
     type = cfg.pop('type')
-    parameters = []
+    param_groups = []
     for name, p in named_parameters:
         if p.requires_grad:
             param = {'params': [p], **cfg.copy()}
@@ -34,8 +34,10 @@ def build_optimizer(cfg: dict, named_parameters: Generator[tuple, None, None]):
                 for substr, multi in multi_list.items():
                     if substr in name:
                         param[key] *= multi
-            parameters.append(param)
-    return OPTIMIZERS[type](parameters, **cfg)
+            if 'weight_decay' in param and p.ndim == 1:
+                param['weight_decay'] = 0
+            param_groups.append(param)
+    return OPTIMIZERS[type](param_groups, **cfg)
 
 
 def build_scheduler(cfg: dict, optimizer):

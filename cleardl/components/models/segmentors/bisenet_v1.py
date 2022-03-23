@@ -76,11 +76,11 @@ class ContextPath(nn.Module):
             ConvBlock(in_channels_5, out_channels, kernel_size=1)
         )
         self.up4 = nn.Sequential(
-            nn.UpsamplingNearest2d(scale_factor=2),
+            nn.UpsamplingBilinear2d(scale_factor=2),
             ConvBlock(out_channels, out_channels, kernel_size=3, padding=1)
         )
         self.up5 = nn.Sequential(
-            nn.UpsamplingNearest2d(scale_factor=2),
+            nn.UpsamplingBilinear2d(scale_factor=2),
             ConvBlock(out_channels, out_channels, kernel_size=3, padding=1)
         )
 
@@ -194,9 +194,11 @@ class BiSeNetV1(nn.Module):
         return preds
 
     def _init_weights(self):
-        for m in self.modules():
+        for name, m in self.named_modules():
+            if 'backbone' in name:
+                continue
             if isinstance(m, nn.Conv2d):
-                nn.init.xavier_normal_(m.weight)
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
             elif isinstance(m, nn.BatchNorm2d):
