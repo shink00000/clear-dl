@@ -24,16 +24,17 @@ def build_model(cfg: dict):
 
 
 def build_optimizer(cfg: dict, named_parameters: Generator[tuple, None, None]):
-    param_args = cfg.pop('param_args', {})
+    multipliers = cfg.pop('multipliers', {})
     type = cfg.pop('type')
     param_groups = []
     for name, p in named_parameters:
         if p.requires_grad:
             param = {'params': [p], **cfg.copy()}
-            for key, multi_list in param_args.items():
-                for substr, multi in multi_list.items():
-                    if substr in name:
-                        param[key] *= multi
+            for key, multiplier in multipliers.items():
+                if key not in name:
+                    continue
+                for arg, factor in multiplier.items():
+                    param[arg] *= factor
             if 'weight_decay' in param and p.ndim == 1:
                 param['weight_decay'] = 0
             param_groups.append(param)

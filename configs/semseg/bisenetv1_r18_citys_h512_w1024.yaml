@@ -18,10 +18,10 @@ data_pipeline:
     data_dir: *data_dir
     transforms:
       train:
-        - { type: PhotoMetricDistortion }
         - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
+        - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
       val:
         - { type: Normalize, mean: *mean, std: *std }
@@ -57,17 +57,18 @@ model:
     mid_channels: [64, 64]
     n_classes: *n_classes
   criterion:
-    cls_loss: { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
-    aux_loss: { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
+    cls_loss:
+      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
+    aux_loss:
+      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
-  param_args:
-    lr:
-      backbone: 0.1
   lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
+  multipliers:
+    "backbone": { lr: 0.1 }
 
 scheduler:
   type: PolynomialLR

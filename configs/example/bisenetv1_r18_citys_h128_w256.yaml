@@ -57,17 +57,18 @@ model:
     mid_channels: [64, 64]
     n_classes: *n_classes
   criterion:
-    cls_loss: { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
-    aux_loss: { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
+    cls_loss:
+      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
+    aux_loss:
+      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
-  param_args:
-    lr:
-      backbone: 0.1
   lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
+  multipliers:
+    "backbone": { lr: 0.1 }
 
 scheduler:
   type: PolynomialLR
