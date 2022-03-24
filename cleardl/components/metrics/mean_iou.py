@@ -52,5 +52,5 @@ class MeanIoU(Metric):
 
         return {
             'text': ''.join(lines),
-            'mIoU': ious.mean()
+            '': ious.mean()
         }
