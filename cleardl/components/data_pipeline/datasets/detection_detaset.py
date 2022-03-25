@@ -1,7 +1,6 @@
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
-from PIL import Image
-from torchvision.transforms.functional import to_tensor
+from torchvision.io import read_image
 from contextlib import redirect_stdout
 from os import devnull
 import torch
@@ -42,7 +41,7 @@ class DetectionDataset(Dataset):
         """
         image_path, annos, meta = self.data_list[idx]
         data_container = {
-            'image': to_tensor(Image.open(image_path)),
+            'image': read_image(image_path.as_posix())/255,
             'bboxes': torch.tensor(annos['bboxes']).float(),
             'labels': torch.tensor(annos['labels']).long()
         }

@@ -57,10 +57,8 @@ model:
     mid_channels: [64, 64]
     n_classes: *n_classes
   criterion:
-    cls_loss:
-      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
-    aux_loss:
-      { type: SoftmaxFocalLoss, gamma: 2, reduction: mean, ignore_index: 255 }
+    cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
@@ -73,7 +71,7 @@ optimizer:
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 40000
+  max_iterations: 22200
 
 metrics:
   - type: MeanIoU

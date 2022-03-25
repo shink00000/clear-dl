@@ -1,9 +1,8 @@
 from torch.utils.data import Dataset
-from PIL import Image
 from pathlib import Path
-from torchvision.transforms.functional import to_tensor
-import numpy as np
-import torch
+from torchvision.io import read_image
+from tqdm import tqdm
+import pickle
 
 from ..transforms import build_transforms
 
@@ -26,7 +25,8 @@ class SemSegDataset(Dataset):
     """
     collate_fn = None
 
-    def __init__(self, phase: str, data_dir: str, transforms: list):
+    def __init__(self, phase: str, data_dir: str, transforms: list, use_pkl: bool = False):
+        self.use_pkl = use_pkl
         self.data_list = self._create_data_list(phase, data_dir)
         self.transforms = build_transforms(transforms)
 
@@ -41,10 +41,17 @@ class SemSegDataset(Dataset):
                 label: (H, W) ... HxW label map
         """
         image_path, label_path = self.data_list[idx]
-        data_container = {
-            'image': to_tensor(Image.open(image_path)),
-            'label': torch.from_numpy(np.array(Image.open(label_path), copy=True, dtype=np.long))
-        }
+        if self.use_pkl:
+            with open(image_path, 'rb') as image_f, open(label_path, 'rb') as label_f:
+                data_container = {
+                    'image': pickle.load(image_f),
+                    'label': pickle.load(label_f)
+                }
+        else:
+            data_container = {
+                'image': read_image(image_path.as_posix()) / 255,
+                'label': read_image(label_path.as_posix()).squeeze().long()
+            }
         data_container = self.transforms(data_container)
         image = data_container['image']
         label = data_container['label']
@@ -61,4 +68,20 @@ class SemSegDataset(Dataset):
             label_path = Path(data_dir) / label_path
             if image_path.exists() and label_path.exists():
                 data_list.append((image_path, label_path))
+
+        if self.use_pkl:
+            # image data into pickle format to speed up file loading
+            new_data_list = []
+            for image_path, label_path in tqdm(data_list, desc='convert image into pickle'):
+                image = read_image(image_path.as_posix()) / 255
+                image_path = image_path.parent/f'{image_path.stem}.pkl'
+                with open(image_path, 'wb') as f:
+                    pickle.dump(image, f)
+                label = read_image(label_path.as_posix()).squeeze().long()
+                label_path = label_path.parent/f'{label_path.stem}.pkl'
+                with open(label_path, 'wb') as f:
+                    pickle.dump(label, f)
+                new_data_list.append((image_path, label_path))
+            data_list = new_data_list
+
         return data_list
