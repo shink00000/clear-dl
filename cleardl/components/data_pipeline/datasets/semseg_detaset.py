@@ -44,8 +44,8 @@ class SemSegDataset(Dataset):
         if self.use_pkl:
             with open(image_path, 'rb') as image_f, open(label_path, 'rb') as label_f:
                 data_container = {
-                    'image': pickle.load(image_f),
-                    'label': pickle.load(label_f)
+                    'image': pickle.load(image_f) / 255,
+                    'label': pickle.load(label_f).long()
                 }
         else:
             data_container = {
@@ -73,11 +73,11 @@ class SemSegDataset(Dataset):
             # image data into pickle format to speed up file loading
             new_data_list = []
             for image_path, label_path in tqdm(data_list, desc='convert image into pickle'):
-                image = read_image(image_path.as_posix()) / 255
+                image = read_image(image_path.as_posix())
                 image_path = image_path.parent/f'{image_path.stem}.pkl'
                 with open(image_path, 'wb') as f:
                     pickle.dump(image, f)
-                label = read_image(label_path.as_posix()).squeeze().long()
+                label = read_image(label_path.as_posix()).squeeze()
                 label_path = label_path.parent/f'{label_path.stem}.pkl'
                 with open(label_path, 'wb') as f:
                     pickle.dump(label, f)
