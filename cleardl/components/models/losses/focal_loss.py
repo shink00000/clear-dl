@@ -73,8 +73,8 @@ class SoftmaxFocalLoss(nn.Module):
         loss = (1 - p).pow(self.gamma) * loss
 
         if self.reduction == 'mean':
-            return loss[valid].mean()
+            return loss.sum() / loss.count_nonzero()
         elif self.reduction == 'sum':
-            return loss[valid].sum()
+            return loss.sum()
         else:
             return loss
