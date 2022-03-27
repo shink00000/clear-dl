@@ -72,7 +72,7 @@ optimizer:
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 22200
+  max_iterations: 40000
 
 metrics:
   - type: MeanIoU
