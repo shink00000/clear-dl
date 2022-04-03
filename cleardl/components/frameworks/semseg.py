@@ -14,15 +14,20 @@ class SemSeg(BaseFramework):
         for i, lr in enumerate(sorted(set(self.scheduler.get_last_lr()))):
             self.results['train'][f'LearningRate/lr_{i}'] = lr
 
+        self._iter_counts = 0
+
     def train_step(self, data: tuple):
+        self._iter_counts += 1
+
         images, targets = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=35, norm_type=2)
-        self.optimizer.step()
-        self.optimizer.zero_grad()
+        if self._iter_counts % 4 == 0:
+            self.optimizer.step()
+            self.optimizer.zero_grad()
         self.train_loss += loss * images.size(0)
         self.train_counts += images.size(0)
         self.scheduler.step()

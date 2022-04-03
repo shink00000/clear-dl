@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from ..backbones import build_backbone, get_channels
 from ..losses import build_loss
+from ..utils.replace_layer import replace_layer_
 
 
 class ConvBlock(nn.Sequential):
@@ -150,7 +151,7 @@ class AuxHead(nn.Module):
 
 class BiSeNetV1(nn.Module):
     def __init__(self, spacial_path: dict, context_path: dict, ffm: dict, head: dict,
-                 aux_head: dict, criterion: dict):
+                 aux_head: dict, criterion: dict, replace: dict = None):
         super().__init__()
 
         self.spacial_path = SpacialPath(**spacial_path)
@@ -161,6 +162,9 @@ class BiSeNetV1(nn.Module):
 
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
+
+        if replace is not None:
+            replace_layer_(self, **replace)
 
         self._init_weights()
 
