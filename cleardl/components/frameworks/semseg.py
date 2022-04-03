@@ -14,8 +14,6 @@ class SemSeg(BaseFramework):
         for i, lr in enumerate(sorted(set(self.scheduler.get_last_lr()))):
             self.results['train'][f'LearningRate/lr_{i}'] = lr
 
-        self._iter_counts = 0
-
     def train_step(self, data: tuple):
         self._iter_counts += 1
 

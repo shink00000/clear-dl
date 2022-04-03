@@ -30,7 +30,7 @@ data_pipeline:
       test:
         - { type: Normalize, mean: *mean, std: *std }
   dataloader:
-    batch_size: 16
+    batch_size: 8
     num_workers: 2
 
 model:
