@@ -59,7 +59,7 @@ model:
     cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
   replace:
-    mode: WS+BCN
+    mode: WS+GN
     num_groups: 32
 
 optimizer:

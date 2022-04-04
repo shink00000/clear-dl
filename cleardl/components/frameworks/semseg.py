@@ -26,7 +26,7 @@ class SemSeg(BaseFramework):
         if self._iter_counts % 4 == 0:
             self.optimizer.step()
             self.optimizer.zero_grad()
-        self.train_loss += loss * images.size(0)
+        self.train_loss += loss * images.size(0) * 4
         self.train_counts += images.size(0)
         self.scheduler.step()
 
