@@ -20,7 +20,7 @@ class SemSeg(BaseFramework):
         images, targets = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
-        loss = self.model.loss(outputs, targets)
+        loss = self.model.loss(outputs, targets) / 4
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=35, norm_type=2)
         if self._iter_counts % 4 == 0:

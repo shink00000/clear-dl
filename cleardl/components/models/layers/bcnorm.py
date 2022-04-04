@@ -18,22 +18,25 @@ class BatchNorm(nn.Module):
         self.register_buffer('running_var', torch.ones(num_features))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        B, C, H, W = x.size()
+        x = x.view(B, C, -1)
         if self.training:
             with torch.no_grad():
-                m = x.mean(dim=(0, 2, 3))
-                v = x.var(dim=(0, 2, 3), unbiased=False)
+                m = x.mean(dim=(0, 2))
+                v = x.var(dim=(0, 2), unbiased=False)
                 self.running_mean += self.momentum * (m - self.running_mean)
                 self.running_var += self.momentum * (v - self.running_var)
 
-        w = self.weight.view(1, -1, 1, 1)
-        b = self.bias.view(1, -1, 1, 1)
+        w = self.weight.view(1, -1, 1)
+        b = self.bias.view(1, -1, 1)
         if self.mode == 'large' and self.training:
-            m = x.mean(dim=(0, 2, 3), keepdim=True)
-            v = x.var(dim=(0, 2, 3), unbiased=False, keepdim=True)
+            m = x.mean(dim=(0, 2), keepdim=True)
+            v = x.var(dim=(0, 2), unbiased=False, keepdim=True)
         else:
-            m = self.running_mean.view(1, -1, 1, 1)
-            v = self.running_var.view(1, -1, 1, 1)
+            m = self.running_mean.view(1, -1, 1)
+            v = self.running_var.view(1, -1, 1)
         y = w * torch.div(x - m, (v + self.eps).sqrt()) + b
+        y = y.view(B, C, H, W)
 
         return y
 
@@ -59,13 +62,13 @@ class ChannelNorm(nn.Module):
         B, C, H, W = x.size()
         G = self.num_groups
 
-        x = x.reshape(B, G, C//G, H, W)
-        w = self.weight.view(1, -1, 1, 1, 1)
-        b = self.bias.view(1, -1, 1, 1, 1)
-        m = x.mean(dim=(2, 3, 4), keepdim=True)
-        v = x.var(dim=(2, 3, 4), unbiased=False, keepdim=True)
+        x = x.view(B, G, -1)
+        w = self.weight.view(1, -1, 1)
+        b = self.bias.view(1, -1, 1)
+        m = x.mean(dim=2, keepdim=True)
+        v = x.var(dim=2, unbiased=False, keepdim=True)
         y = w * torch.div(x - m, (v + self.eps).sqrt()) + b
-        y = y.reshape(B, C, H, W)
+        y = y.view(B, C, H, W)
 
         return y
 
