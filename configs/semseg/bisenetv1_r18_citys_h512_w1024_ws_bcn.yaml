@@ -29,6 +29,7 @@ data_pipeline:
         - { type: Normalize, mean: *mean, std: *std }
       test:
         - { type: Normalize, mean: *mean, std: *std }
+    use_pkl: true
   dataloader:
     batch_size: 8
     num_workers: 2
