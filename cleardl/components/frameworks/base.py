@@ -30,8 +30,6 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.val_loss = 0
         self.val_counts = 0
 
-        self._iter_counts = 0
-
     def classwise_eval_(self, classwise_eval: bool):
         for k, m in self.metrics.items():
             if hasattr(m, 'classwise'):

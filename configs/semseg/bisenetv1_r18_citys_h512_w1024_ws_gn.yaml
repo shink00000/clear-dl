@@ -30,7 +30,7 @@ data_pipeline:
         - { type: Normalize, mean: *mean, std: *std }
     use_pkl: true
   dataloader:
-    batch_size: 16
+    batch_size: 2
     num_workers: 2
 
 model:
@@ -68,12 +68,11 @@ optimizer:
   momentum: 0.9
   weight_decay: 0.0005
   multipliers:
-    "backbone": { lr: 0.1 }
 
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 40000
+  max_iterations: 175000
 
 metrics:
   - type: MeanIoU
