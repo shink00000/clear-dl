@@ -67,12 +67,11 @@ optimizer:
   lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
-  multipliers:
 
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 175000
+  max_iterations: 160000
 
 metrics:
   - type: MeanIoU
