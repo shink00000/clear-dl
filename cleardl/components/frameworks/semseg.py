@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 
 from .base import BaseFramework
 
@@ -64,6 +65,40 @@ class SemSeg(BaseFramework):
             'optimizer': self.optimizer.state_dict(),
             'scheduler': self.scheduler.state_dict()
         }
+
+    def eval_step(self, data: tuple):
+        images, targets = data
+        images, targets = images.to(self.device), targets.to(self.device)
+        ms_preds = []
+        for factor in [0.75, 1, 1.25, 1.5, 1.75, 2.0]:
+            for flip in [True, False]:
+                preds = self._multi_scale_pred(images, factor, flip)
+                ms_preds.append(preds)
+        preds = torch.stack(ms_preds).mean(dim=0)
+        self.metrics.update(preds, targets)
+
+    def _multi_scale_pred(self, images: torch.Tensor, factor: float, flip: bool) -> torch.Tensor:
+        _, _, H, W = images.shape
+        if factor != 1:
+            images = F.interpolate(images, scale_factor=factor, mode='bilinear', align_corners=True)
+        if flip:
+            images = images.flip([-1])
+        outputs = self.model(images)
+        preds = self.model.predict(outputs)
+        if factor != 1:
+            preds = F.interpolate(preds, size=(H, W))
+        if flip:
+            preds = preds.flip([-1])
+        return preds
+
+    def eval_step_end(self):
+        for name, val in self.metrics.compute().items():
+            if isinstance(val, dict):
+                for k, v in val.items():
+                    self.results['val'][f'Metric/{name}{k}'] = v
+            else:
+                self.results['val'][f'Metric/{name}'] = val
+        self.metrics.reset()
 
     def test_step(self, data: tuple):
         images, *_ = data

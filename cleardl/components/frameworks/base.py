@@ -61,6 +61,14 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def eval_step(self, data: tuple):
+        pass
+
+    @abstractmethod
+    def eval_step_end(self):
+        pass
+
+    @abstractmethod
     def test_step(self, data: tuple):
         pass
 

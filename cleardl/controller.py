@@ -97,13 +97,12 @@ class Controller:
 
     def evaluate(self):
         self.module.model.eval()
-        self.module.run_eval = True
         self.module.classwise_eval_(True)
-        val_dataloader = self.datamodule.val_dataloader()
+        test_dataloader = self.datamodule.test_dataloader()
         with torch.no_grad():
-            for data in tqdm(val_dataloader):
-                self.module.val_step(data)
-            self.module.val_step_end()
+            for data in tqdm(test_dataloader):
+                self.module.eval_step(data)
+            self.module.eval_step_end()
         self.module.view_metrics()
 
     def inference(self):

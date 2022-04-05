@@ -70,6 +70,22 @@ class Detection(BaseFramework):
             'scheduler': self.scheduler.state_dict()
         }
 
+    def eval_step(self, data: tuple):
+        images, targets, metas = data
+        images, targets = images.to(self.device), tuple(t.to(self.device) for t in targets)
+        outputs = self.model(images)
+        preds = self.model.predict(outputs)
+        self.metrics.update(preds, metas)
+
+    def eval_step_end(self):
+        for name, val in self.metrics.compute().items():
+            if isinstance(val, dict):
+                for k, v in val.items():
+                    self.results['val'][f'Metric/{name}{k}'] = v
+            else:
+                self.results['val'][f'Metric/{name}'] = val
+        self.metrics.reset()
+
     def test_step(self, data: tuple):
         images, *_ = data
         outputs = self.model(images)
