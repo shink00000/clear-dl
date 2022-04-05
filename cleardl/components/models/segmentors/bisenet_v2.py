@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from .bisenet_v1 import ConvBlock
 from ..losses import build_loss
+from ..utils.replace_layer import replace_layer_
 
 
 class DetailBranch(nn.Sequential):
@@ -167,25 +168,23 @@ class BilateralGuidedAggregationLayer(nn.Module):
 
 
 class SegmentationHead(nn.Sequential):
-    def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
+    def __init__(self, in_channels: int, mid_channels: int, n_classes: int):
         super().__init__(
             ConvBlock(in_channels, mid_channels, kernel_size=3, padding=1),
             nn.Dropout2d(0.1),
-            nn.Conv2d(mid_channels, n_classes, kernel_size=1),
-            nn.UpsamplingBilinear2d(input_size)
+            nn.Conv2d(mid_channels, n_classes, kernel_size=1)
         )
 
 
 class AuxHead(nn.Module):
-    def __init__(self, in_channels: list, mid_channels: list, n_classes: int, input_size: list):
+    def __init__(self, in_channels: list, mid_channels: list, n_classes: int):
         assert len(in_channels) == len(mid_channels)
         super().__init__()
         for i in range(len(in_channels)):
             setattr(self, f'aux_{i}', nn.Sequential(
                 ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
                 ConvBlock(mid_channels[i], mid_channels[i], kernel_size=3, padding=1),
-                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1),
-                nn.UpsamplingBilinear2d(input_size)
+                nn.Conv2d(mid_channels[i], n_classes, kernel_size=1)
             ))
 
     def forward(self, auxs: list):
@@ -193,12 +192,12 @@ class AuxHead(nn.Module):
         for i in range(len(auxs)):
             aux_out = getattr(self, f'aux_{i}')(auxs[i])
             aux_outs.append(aux_out)
-        return aux_out
+        return aux_outs
 
 
 class BiSeNetV2(nn.Module):
     def __init__(self, detail_branch: dict, semantic_branch: dict, bga: dict,
-                 head: dict, aux_head: dict, criterion: dict):
+                 head: dict, aux_head: dict, criterion: dict, replace: dict = None):
         super().__init__()
         self.detail_branch = DetailBranch(**detail_branch)
         self.semantic_branch = SemanticBranch(**semantic_branch)
@@ -209,33 +208,47 @@ class BiSeNetV2(nn.Module):
         self.cls_loss = build_loss(criterion['cls_loss'])
         self.aux_loss = build_loss(criterion['aux_loss'])
 
+        if replace is not None:
+            replace_layer_(self, **replace)
+
         self._init_weights()
 
     def forward(self, x):
+        H, W = x.size()[2:]
+
         x_det = self.detail_branch(x)
         *auxs, x_sem = self.semantic_branch(x)
         x = self.bga(x_det, x_sem)
         out = self.head(x)
         aux_outs = self.aux_head(auxs)
-        return out, aux_outs
+
+        # restore
+        out = F.interpolate(out, size=(H, W), mode='bilinear', align_corners=True)
+        new_aux_outs = []
+        for aux_out in aux_outs:
+            aux_out = F.interpolate(aux_out, size=(H, W), mode='bilinear', align_corners=True)
+            new_aux_outs.append(aux_out)
+        aux_outs = new_aux_outs
+
+        return (out, *aux_outs)
 
     def loss(self, outputs: tuple, targets: torch.Tensor) -> torch.Tensor:
-        cls_out, *aux_outs = outputs
-        cls_loss = self.cls_loss(cls_out, targets)
+        cls_outs, *aux_outs = outputs
+        cls_loss = self.cls_loss(cls_outs, targets)
         aux_loss = 0
         for aux_out in aux_outs:
             aux_loss = self.aux_loss(aux_out, targets)
         return cls_loss + aux_loss
 
     def predict(self, outputs: tuple) -> torch.Tensor:
-        cls_out, *_ = outputs
-        preds = F.softmax(cls_out, dim=1)
+        cls_outs, *_ = outputs
+        preds = F.softmax(cls_outs, dim=1)
         return preds
 
     def _init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.xavier_normal_(m.weight)
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
             elif isinstance(m, nn.BatchNorm2d):

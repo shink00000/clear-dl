@@ -24,14 +24,13 @@ data_pipeline:
         - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
       val:
+        - { type: Resize, size: *size }
         - { type: Normalize, mean: *mean, std: *std }
       test:
         - { type: Normalize, mean: *mean, std: *std }
+    use_pkl: true
   dataloader:
-    batch_size:
-      train: 16
-      val: 4
-      test: 4
+    batch_size: 16
     num_workers: 2
 
 model:

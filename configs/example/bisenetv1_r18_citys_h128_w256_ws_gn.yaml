@@ -1,5 +1,5 @@
 __variables:
-  - &size [512, 1024]
+  - &size [128, 256]
   - &mean [0.485, 0.456, 0.406]
   - &std [0.229, 0.224, 0.225]
   - &data_dir ./data/cityscapes_ss/
@@ -30,7 +30,7 @@ data_pipeline:
         - { type: Normalize, mean: *mean, std: *std }
     use_pkl: true
   dataloader:
-    batch_size: 16
+    batch_size: 2
     num_workers: 2
 
 model:
@@ -58,19 +58,20 @@ model:
   criterion:
     cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
     aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+  replace:
+    mode: WS+GN
+    num_groups: 32
 
 optimizer:
   type: SGD
   lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
-  multipliers:
-    "backbone": { lr: 0.1 }
 
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 40000
+  max_iterations: 160000
 
 metrics:
   - type: MeanIoU

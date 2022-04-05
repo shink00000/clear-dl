@@ -131,7 +131,7 @@ class SegmentationHead(nn.Sequential):
 
 
 class AuxHead(nn.Module):
-    def __init__(self, in_channels: list, mid_channels: list, n_classes: int,):
+    def __init__(self, in_channels: list, mid_channels: list, n_classes: int):
         assert len(in_channels) == len(mid_channels)
         super().__init__()
         for i in range(len(in_channels)):

@@ -39,6 +39,8 @@ class DataPipeline:
         dataset = DATASETS[dataset.pop('type')](phase=phase, **dataset)
 
         dataloader = self._phase_dict(self.dataloader, phase)
+        if phase == 'test':
+            dataloader['batch_size'] = 1
         return DataLoader(
             dataset,
             shuffle=phase == 'train',

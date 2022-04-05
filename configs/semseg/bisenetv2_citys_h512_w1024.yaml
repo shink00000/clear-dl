@@ -18,18 +18,17 @@ data_pipeline:
     data_dir: *data_dir
     transforms:
       train:
-        - { type: PhotoMetricDistortion }
-        - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 4.0] }
+        - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
-        - { type: PixelwiseCutOff, p: [0.0, 0.1] }
-      val:
+        - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
+      val:
         - { type: Resize, size: *size }
+        - { type: Normalize, mean: *mean, std: *std }
       test:
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, size: *size }
+    use_pkl: true
   dataloader:
     batch_size: 16
     num_workers: 2
@@ -47,29 +46,26 @@ model:
     in_channels: *channels
     mid_channels: 1024
     n_classes: *n_classes
-    input_size: *size
   aux_head:
     in_channels: *aux_channels
-    mid_channels: [16, 64, 256, 1024]
+    mid_channels: [16, 64, 128, 512]
     n_classes: *n_classes
-    input_size: *size
   criterion:
-    cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
-    aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
 
 optimizer:
   type: SGD
-  param_args:
-    weight_decay:
-      bias: 0.
-  lr: 0.05
+  lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
+  multipliers:
+    "backbone": { lr: 0.1 }
 
 scheduler:
   type: PolynomialLR
   gamma: 0.9
-  max_iterations: 120
+  max_iterations: 40000
 
 metrics:
   - type: MeanIoU
