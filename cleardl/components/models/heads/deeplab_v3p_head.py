@@ -50,7 +50,7 @@ class ASPP(nn.Module):
 
 class DeepLabV3PHead(nn.Module):
     def __init__(self, in_channels: int, low_in_channels: int, mid_channels: int, low_out_channels: int,
-                 bins: list, n_classes: int, input_size: list):
+                 bins: list, n_classes: int):
         super().__init__()
         self.low = nn.Sequential(
             nn.Conv2d(low_in_channels, low_out_channels, kernel_size=1, bias=False),
@@ -63,7 +63,6 @@ class DeepLabV3PHead(nn.Module):
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True)
         )
-        self.up1 = nn.UpsamplingBilinear2d([v//4 for v in input_size])
         self.conv3x3 = nn.Sequential(
             SeparatableConv2d(mid_channels+low_out_channels, mid_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(mid_channels),
@@ -71,7 +70,6 @@ class DeepLabV3PHead(nn.Module):
         )
         self.drop = nn.Dropout2d(0.1)
         self.cls_top = nn.Conv2d(mid_channels, n_classes, kernel_size=1)
-        self.up2 = nn.UpsamplingBilinear2d(input_size)
 
         self._init_weights()
 
@@ -79,13 +77,12 @@ class DeepLabV3PHead(nn.Module):
         low = self.low(low)
         x = self.aspp(x)
         x = self.conv1x1(x)
-        x = self.up1(x)
+        x = F.interpolate(x, size=low.size()[2:], mode='bilinear', align_corners=True)
         x = torch.cat([x, low], dim=1)
 
         x = self.conv3x3(x)
         x = self.drop(x)
-        x = self.cls_top(x)
-        out = self.up2(x)
+        out = self.cls_top(x)
 
         return out
 
@@ -104,7 +101,7 @@ class DeepLabV3PHead(nn.Module):
 
 
 class DeepLabV3PAuxHead(nn.Module):
-    def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
+    def __init__(self, in_channels: int, mid_channels: int, n_classes: int):
         super().__init__()
 
         self.conv = nn.Sequential(
@@ -114,15 +111,13 @@ class DeepLabV3PAuxHead(nn.Module):
         )
         self.drop = nn.Dropout2d(0.1)
         self.cls_top = nn.Conv2d(mid_channels, n_classes, kernel_size=1)
-        self.up = nn.UpsamplingBilinear2d(input_size)
 
         self._init_weights()
 
     def forward(self, x: torch.Tensor):
         x = self.conv(x)
         x = self.drop(x)
-        x = self.cls_top(x)
-        out = self.up(x)
+        out = self.cls_top(x)
         return out
 
     def _init_weights(self):

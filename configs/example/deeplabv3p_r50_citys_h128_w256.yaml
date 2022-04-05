@@ -20,17 +20,17 @@ data_pipeline:
     data_dir: *data_dir
     transforms:
       train:
-        - { type: PhotoMetricDistortion }
-        - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, scale_range: [1.0, 4.0] }
+        - { type: Resize, scale_range: [0.5, 2.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
-      val:
+        - { type: PhotoMetricDistortion }
         - { type: Normalize, mean: *mean, std: *std }
+      val:
         - { type: Resize, size: *size }
+        - { type: Normalize, mean: *mean, std: *std }
       test:
         - { type: Normalize, mean: *mean, std: *std }
-        - { type: Resize, size: *size }
+    use_pkl: true
   dataloader:
     batch_size: 2
     num_workers: 2
@@ -42,39 +42,32 @@ model:
     type: ResNet
     depth: 50
     weights: default
-    frozen_stages: 1
     replace_stride_with_dilation: *dilation
   head:
     mid_channels: 512
     low_out_channels: 48
     bins: *bins
     n_classes: *n_classes
-    input_size: *size
   aux_head:
     mid_channels: 256
-    n_classes: *n_classes
-    input_size: *size     
+    n_classes: *n_classes  
   criterion:
-    cls_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
-    aux_loss: { type: CrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    cls_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+    aux_loss: { type: OHEMCrossEntropyLoss, reduction: mean, ignore_index: 255 }
+  replace:
+    mode: WS+GN
+    num_groups: 32
 
 optimizer:
   type: SGD
-  param_args:
-    lr:
-      backbone: 0.1
-      bias: 2.
-    weight_decay:
-      bias: 0.
-  lr: 0.01
+  lr: 0.025
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
-  type: WarmupExponentialLR
-  gamma: 0.96
-  warmup_interval: 3
-  warmup_start_factor: 0.3
+  type: PolynomialLR
+  gamma: 0.9
+  max_iterations: 160000
 
 metrics:
   - type: MeanIoU
