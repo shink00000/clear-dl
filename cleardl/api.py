@@ -16,7 +16,7 @@ def main(args):
     # build components
     with open(args.config_path, 'r') as f:
         cfg = yaml.load(f, Loader=yaml.SafeLoader)
-    Framework = build_framework(cfg['framework'])
+    Framework, frame_kwargs = build_framework(cfg['framework'])
     data_pipeline = build_data_pipeline(cfg['data_pipeline'])
     model = build_model(cfg['model'])
     optimizer = build_optimizer(cfg['optimizer'], named_parameters=model.named_parameters())
@@ -26,7 +26,8 @@ def main(args):
         model=model,
         optimizer=optimizer,
         scheduler=scheduler,
-        metrics=metrics
+        metrics=metrics,
+        **frame_kwargs
     )
 
     # execute

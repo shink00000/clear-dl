@@ -14,9 +14,9 @@ def build_data_pipeline(cfg: dict):
 
 
 def build_framework(cfg: dict):
-    Frame = FRAMEWORKS[cfg['type']]
-    Frame.INPUT_SIZE = cfg['input_size']
-    return Frame
+    Frame = FRAMEWORKS[cfg.pop('type')]
+    frame_kwargs = cfg
+    return Frame, frame_kwargs
 
 
 def build_model(cfg: dict):

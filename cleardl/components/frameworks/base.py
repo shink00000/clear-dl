@@ -5,9 +5,7 @@ from torchinfo import summary
 
 
 class BaseFramework(nn.Module, metaclass=ABCMeta):
-    INPUT_SIZE = None
-
-    def __init__(self, model: nn.Module, optimizer: object, scheduler: object, metrics: object):
+    def __init__(self, model: nn.Module, optimizer: object, scheduler: object, metrics: object, **kwargs):
         super().__init__()
         if torch.cuda.is_available():
             self.device = torch.device('cuda:0')
@@ -19,6 +17,8 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.metrics = metrics
+        for key, val in kwargs.items():
+            setattr(self, key, val)
 
         self.results = {'train': {}, 'val': {}}
         self.checkpoints = {}
@@ -81,4 +81,4 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         print('=========================================================================')
         print(self)
         print('=========================================================================')
-        summary(self.model, (2, 3, *self.INPUT_SIZE))
+        summary(self.model, (2, 3, *self.input_size))
