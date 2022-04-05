@@ -7,12 +7,12 @@ from ..extras import build_extra
 from ..necks.bifpn import BiFPN
 from ..heads.efficient_head import EfficientSegHead
 from ..losses import build_loss
-from ..utils.replace_layer import replace_bn_to_wsgn_
+from ..utils.replace_layer import replace_layer_
 
 
 class EfficientSeg(nn.Module):
     def __init__(self, size: str, feat_levels: list, backbone: dict, extra: dict, neck: dict,
-                 head: dict, criterion: dict, replace_bn_to_wsgn: bool = False):
+                 head: dict, criterion: dict, replace: dict = None):
         super().__init__()
 
         # definition by size
@@ -48,17 +48,23 @@ class EfficientSeg(nn.Module):
         self.neck = BiFPN(**neck)
         self.head = EfficientSegHead(**head)
 
-        if replace_bn_to_wsgn:
-            replace_bn_to_wsgn_(self)
+        if replace is not None:
+            replace_layer_(self, **replace)
 
         # loss
         self.cls_loss = build_loss(criterion['cls_loss'])
 
     def forward(self, x):
+        H, W = x.size()[2:]
+
         x = self.backbone(x)
         x = self.extra(x)
         x = self.neck(x)
         outs = self.head(x)
+
+        # restore
+        outs = F.interpolate(outs, size=(H, W), mode='bilinear', align_corners=True)
+
         return outs
 
     def loss(self, outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
