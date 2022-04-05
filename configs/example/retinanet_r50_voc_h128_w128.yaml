@@ -72,15 +72,12 @@ model:
 
 optimizer:
   type: SGD
-  param_args:
-    lr:
-      backbone: 0.1
-      bias: 2.
-    weight_decay:
-      bias: 0.
   lr: 0.01
   momentum: 0.9
   weight_decay: 0.0005
+  multipliers:
+    "backbone": { lr: 0.1 }
+    "bias": { lr: 2.0 }
 
 scheduler:
   type: WarmupMultiStepLR
