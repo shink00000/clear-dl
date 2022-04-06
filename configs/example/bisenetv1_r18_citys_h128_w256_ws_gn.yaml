@@ -11,6 +11,8 @@ __particular_variables:
 framework:
   type: SemSeg
   input_size: *size
+  step_by: epoch
+  accumulation_step: 8
 
 data_pipeline:
   dataset:
@@ -64,14 +66,16 @@ model:
 
 optimizer:
   type: SGD
-  lr: 0.025
+  lr: 0.01
   momentum: 0.9
   weight_decay: 0.0005
 
 scheduler:
-  type: PolynomialLR
-  gamma: 0.9
-  max_iterations: 160000
+  type: WarmupMultiStepLR
+  milestones: [60, 90]
+  gamma: 0.1
+  warmup_interval: 3
+  warmup_start_factor: 0.3
 
 metrics:
   - type: MeanIoU

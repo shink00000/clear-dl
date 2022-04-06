@@ -6,9 +6,9 @@ from .base import BaseFramework
 class Detection(BaseFramework):
     def epoch_start(self):
         self.train_loss = 0
-        self.train_counts = 0
+        self.train_count = 0
         self.val_loss = 0
-        self.val_counts = 0
+        self.val_count = 0
         self.results = {'train': {}, 'val': {}}
 
         for i, lr in enumerate(sorted(set(self.scheduler.get_last_lr()))):
@@ -29,11 +29,11 @@ class Detection(BaseFramework):
         # self.scaler.step(self.optimizer)
         # self.scaler.update()
         self.train_loss += loss * images.size(0)
-        self.train_counts += images.size(0)
+        self.train_count += images.size(0)
 
     def train_step_end(self):
-        self.train_loss = (self.train_loss / self.train_counts).item()
-        del self.train_counts
+        self.train_loss = (self.train_loss / self.train_count).item()
+        del self.train_count
         self.results['train']['Loss/compare'] = self.train_loss
         self.results['train']['Loss/train'] = self.train_loss
         self.scheduler.step()
@@ -44,14 +44,14 @@ class Detection(BaseFramework):
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
         self.val_loss += loss * images.size(0)
-        self.val_counts += images.size(0)
+        self.val_count += images.size(0)
         if self.run_eval:
             preds = self.model.predict(outputs)
             self.metrics.update(preds, metas)
 
     def val_step_end(self):
-        self.val_loss = (self.val_loss / self.val_counts).item()
-        del self.val_counts
+        self.val_loss = (self.val_loss / self.val_count).item()
+        del self.val_count
         self.results['val']['Loss/compare'] = self.val_loss
         self.results['val']['Loss/val'] = self.val_loss
         if self.run_eval:

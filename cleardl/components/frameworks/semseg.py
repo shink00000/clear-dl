@@ -7,32 +7,37 @@ from .base import BaseFramework
 class SemSeg(BaseFramework):
     def epoch_start(self):
         self.train_loss = 0
-        self.train_counts = 0
+        self.train_count = 0
         self.val_loss = 0
-        self.val_counts = 0
+        self.val_count = 0
         self.results = {'train': {}, 'val': {}}
 
         for i, lr in enumerate(sorted(set(self.scheduler.get_last_lr()))):
             self.results['train'][f'LearningRate/lr_{i}'] = lr
 
     def train_step(self, data: tuple):
+        self._train_iter_count += 1
         images, targets = data
         images, targets = images.to(self.device), targets.to(self.device)
         outputs = self.model(images)
-        loss = self.model.loss(outputs, targets)
+        loss = self.model.loss(outputs, targets) / self.accumulation_step
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=35, norm_type=2)
-        self.optimizer.step()
-        self.optimizer.zero_grad()
-        self.train_loss += loss * images.size(0)
-        self.train_counts += images.size(0)
-        self.scheduler.step()
+        if self._train_iter_count % self.accumulation_step == 0:
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+        self.train_loss += loss * images.size(0) * self.accumulation_step
+        self.train_count += images.size(0)
+        if self.step_by == 'iteration':
+            self.scheduler.step()
 
     def train_step_end(self):
-        self.train_loss = (self.train_loss / self.train_counts).item()
-        del self.train_counts
+        self.train_loss = (self.train_loss / self.train_count).item()
+        del self.train_count
         self.results['train']['Loss/compare'] = self.train_loss
         self.results['train']['Loss/train'] = self.train_loss
+        if self.step_by == 'epoch':
+            self.scheduler.step()
 
     def val_step(self, data: tuple):
         images, targets = data
@@ -40,14 +45,14 @@ class SemSeg(BaseFramework):
         outputs = self.model(images)
         loss = self.model.loss(outputs, targets)
         self.val_loss += loss * images.size(0)
-        self.val_counts += images.size(0)
+        self.val_count += images.size(0)
         if self.run_eval:
             preds = self.model.predict(outputs)
             self.metrics.update(preds, targets)
 
     def val_step_end(self):
-        self.val_loss = (self.val_loss / self.val_counts).item()
-        del self.val_counts
+        self.val_loss = (self.val_loss / self.val_count).item()
+        del self.val_count
         self.results['val']['Loss/compare'] = self.val_loss
         self.results['val']['Loss/val'] = self.val_loss
         if self.run_eval:

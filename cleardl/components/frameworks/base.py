@@ -5,7 +5,8 @@ from torchinfo import summary
 
 
 class BaseFramework(nn.Module, metaclass=ABCMeta):
-    def __init__(self, model: nn.Module, optimizer: object, scheduler: object, metrics: object, **kwargs):
+    def __init__(self, model: nn.Module, optimizer: object, scheduler: object, metrics: object, input_size: list,
+                 step_by: str = 'epoch', accumulation_step: int = 1):
         super().__init__()
         if torch.cuda.is_available():
             self.device = torch.device('cuda:0')
@@ -17,8 +18,9 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.metrics = metrics
-        for key, val in kwargs.items():
-            setattr(self, key, val)
+        self.input_size = input_size
+        self.step_by = step_by
+        self.accumulation_step = accumulation_step
 
         self.results = {'train': {}, 'val': {}}
         self.checkpoints = {}
@@ -26,9 +28,11 @@ class BaseFramework(nn.Module, metaclass=ABCMeta):
         self.run_eval = False
 
         self.train_loss = 0
-        self.train_counts = 0
+        self.train_count = 0
         self.val_loss = 0
-        self.val_counts = 0
+        self.val_count = 0
+
+        self._train_iter_count = 0
 
     def classwise_eval_(self, classwise_eval: bool):
         for k, m in self.metrics.items():

@@ -31,8 +31,8 @@ class MeanIoU(Metric):
         valid = targets != self.ignore_index
         preds, targets = preds[valid], targets[valid]
 
-        counts = (targets * self.n_classes + preds).bincount(minlength=self.n_classes**2)
-        cm = counts.reshape(self.n_classes, self.n_classes)
+        count = (targets * self.n_classes + preds).bincount(minlength=self.n_classes**2)
+        cm = count.reshape(self.n_classes, self.n_classes)
         self.cm += cm.cpu()
 
     def compute(self) -> dict:
