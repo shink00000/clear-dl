@@ -24,11 +24,11 @@ class DeepLabV3P(nn.Module):
         self.head = DeepLabV3PHead(**head)
         self.aux_head = DeepLabV3PAuxHead(**aux_head)
 
-        self.cls_loss = build_loss(criterion['cls_loss'])
-        self.aux_loss = build_loss(criterion['aux_loss'])
-
         if replace is not None:
             replace_layer_(self, **replace)
+
+        self.cls_loss = build_loss(criterion['cls_loss'])
+        self.aux_loss = build_loss(criterion['aux_loss'])
 
     def forward(self, x):
         H, W = x.size()[2:]

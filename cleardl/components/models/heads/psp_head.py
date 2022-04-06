@@ -33,7 +33,7 @@ class PyramidPooling(nn.Module):
 
 
 class PSPHead(nn.Module):
-    def __init__(self, in_channels: int, mid_channels: int, bins: list, n_classes: int, input_size: list):
+    def __init__(self, in_channels: int, mid_channels: int, bins: list, n_classes: int):
         super().__init__()
 
         self.pp = PyramidPooling(in_channels, mid_channels, bins)
@@ -44,7 +44,6 @@ class PSPHead(nn.Module):
         )
         self.drop = nn.Dropout2d(0.1)
         self.cls_top = nn.Conv2d(mid_channels, n_classes, kernel_size=1)
-        self.up = nn.UpsamplingBilinear2d(input_size)
 
         self._init_weights()
 
@@ -52,8 +51,7 @@ class PSPHead(nn.Module):
         x = self.pp(x)
         x = self.conv(x)
         x = self.drop(x)
-        x = self.cls_top(x)
-        out = self.up(x)
+        out = self.cls_top(x)
         return out
 
     def _init_weights(self):
@@ -71,7 +69,7 @@ class PSPHead(nn.Module):
 
 
 class PSPAuxHead(nn.Module):
-    def __init__(self, in_channels: int, mid_channels: int, n_classes: int, input_size: list):
+    def __init__(self, in_channels: int, mid_channels: int, n_classes: int):
         super().__init__()
 
         self.conv = nn.Sequential(
@@ -81,15 +79,13 @@ class PSPAuxHead(nn.Module):
         )
         self.drop = nn.Dropout2d(0.1)
         self.cls_top = nn.Conv2d(mid_channels, n_classes, kernel_size=1)
-        self.up = nn.UpsamplingBilinear2d(input_size)
 
         self._init_weights()
 
     def forward(self, x: torch.Tensor):
         x = self.conv(x)
         x = self.drop(x)
-        x = self.cls_top(x)
-        out = self.up(x)
+        out = self.cls_top(x)
         return out
 
     def _init_weights(self):
