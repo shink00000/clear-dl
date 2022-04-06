@@ -8,10 +8,11 @@ from ..losses import build_loss
 
 class ConvBNAct(nn.Sequential):
     def __init__(self, in_channels: int, out_channels: int):
-        super().__init__()
-        self.add_module('0', nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False))
-        self.add_module('1', nn.BatchNorm2d(out_channels))
-        self.add_module('2', nn.ReLU(inplace=True))
+        super().__init__(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
 
 
 class Stage(nn.Sequential):
@@ -71,7 +72,7 @@ class UNet(nn.Module):
     def _init_weights(self):
         for name, m in self.named_modules():
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
-                nn.init.xavier_uniform_(m.weight, gain=1.0)
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
                 if m.bias is not None:
                     if 'cls_top' in name:
                         nn.init.constant_(m.bias, np.log((1 - 0.01) / 0.01))
