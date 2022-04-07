@@ -5,7 +5,7 @@ import torchvision.transforms as T
 
 
 class PhotoMetricDistortion(nn.Module):
-    def __init__(self, brightness: float = 0, contrast: float = 0, saturation: float = 0, hue: float = 0):
+    def __init__(self, brightness: float = 0.4, contrast: float = 0.4, saturation: float = 0.4, hue: float = 0.4):
         super().__init__()
         self.cj = T.ColorJitter(brightness, contrast, saturation, hue)
 

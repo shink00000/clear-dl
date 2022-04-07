@@ -42,9 +42,7 @@ class SpacialPath(nn.Sequential):
         super().__init__(*modules)
 
 
-class ARM(nn.Module):
-    """ Attention Refinement Module """
-
+class AttentionRefinementModule(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.conv = nn.Sequential(
@@ -70,8 +68,8 @@ class ContextPath(nn.Module):
         # layers
         self.backbone = build_backbone(backbone)
         in_channels_4, in_channels_5 = get_channels(self.backbone, feat_levels)
-        self.arm4 = ARM(in_channels_4, out_channels)
-        self.arm5 = ARM(in_channels_5, out_channels)
+        self.arm4 = AttentionRefinementModule(in_channels_4, out_channels)
+        self.arm5 = AttentionRefinementModule(in_channels_5, out_channels)
         self.tail = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             ConvBlock(in_channels_5, out_channels, kernel_size=1)
@@ -101,16 +99,14 @@ class ContextPath(nn.Module):
         return out4, out5
 
 
-class FFM(nn.Module):
-    """ Feature Fusion Module """
-
+class FeatureFusionModule(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.conv = ConvBlock(in_channels, out_channels, kernel_size=1)
         self.attn = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             ConvBlock(out_channels, out_channels, kernel_size=1),
-            nn.Sigmoid()
+            ConvBlock(out_channels, out_channels, kernel_size=1, act='sigmoid')
         )
 
     def forward(self, x_sp, x_cp):
@@ -125,7 +121,6 @@ class SegmentationHead(nn.Sequential):
     def __init__(self, in_channels: int, mid_channels: int, n_classes: int):
         super().__init__(
             ConvBlock(in_channels, mid_channels, kernel_size=3, padding=1),
-            nn.Dropout2d(0.1),
             nn.Conv2d(mid_channels, n_classes, kernel_size=1)
         )
 
@@ -137,7 +132,6 @@ class AuxHead(nn.Module):
         for i in range(len(in_channels)):
             setattr(self, f'aux_{i}', nn.Sequential(
                 ConvBlock(in_channels[i], mid_channels[i], kernel_size=3, padding=1),
-                nn.Dropout2d(0.1),
                 nn.Conv2d(mid_channels[i], n_classes, kernel_size=1)
             ))
 
@@ -156,7 +150,7 @@ class BiSeNetV1(nn.Module):
 
         self.spacial_path = SpacialPath(**spacial_path)
         self.context_path = ContextPath(**context_path)
-        self.ffm = FFM(**ffm)
+        self.ffm = FeatureFusionModule(**ffm)
         self.head = SegmentationHead(**head)
         self.aux_head = AuxHead(**aux_head)
 

@@ -20,7 +20,7 @@ data_pipeline:
     data_dir: *data_dir
     transforms:
       train:
-        - { type: Resize, scale_range: [0.5, 2.0] }
+        - { type: Resize, scale_range: [0.5, 1.0] }
         - { type: RandomCrop, size: *size }
         - { type: RandomHorizontalFlip }
         - { type: PhotoMetricDistortion }
@@ -72,8 +72,8 @@ optimizer:
 
 scheduler:
   type: WarmupMultiStepLR
-  milestones: [60, 90]
-  gamma: 0.1
+  milestones: [50, 75, 100]
+  gamma: 0.3
   warmup_interval: 3
   warmup_start_factor: 0.3
 
